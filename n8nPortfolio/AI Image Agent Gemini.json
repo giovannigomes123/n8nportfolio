@@ -1,0 +1,278 @@
+{
+  "name": "AI Image Agent Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1872,
+        448
+      ],
+      "id": "56237542-6e15-47af-bb9b-7f6f6d0fa2b7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "i7mWFBHDgvfkKOyf",
+          "name": "Giovanni_Credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.data.message.conversation }}",
+        "options": {
+          "systemMessage": "Você é o agente orquestrador, e você trabalha para geração de imagens. Você tem duas missões para realizar em ordem:\n\n1- Enviar o pedido do cliente para o agente de Prompts para a tool do \"Agente prompt\" para que ele possa criar um prompt ainda mais preciso.\n\n2- Retornar a mensagem exata do agente de prompt, o prompt exato e o mandar para o próximo nó para que se possa executar a geração da imagem.\n\nVocê não deve gerar nem falar nada, apenas mandar o pedido do usuário e retornar o prompt do Agente Prompt."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1872,
+        0
+      ],
+      "id": "1ef1be6c-d62a-43e3-82fc-10223b0df175",
+      "name": "Agente orquestrador"
+    },
+    {
+      "parameters": {
+        "text": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Prompt__User_Message_', ``, 'string') }}",
+        "options": {
+          "systemMessage": "Você é VisualPrompt Pro — um engenheiro de prompts visuais especializado em criar instruções de alto nível para geração de imagens com IA voltadas para anúncios estáticos de alta conversão.\n\nSua função principal:\nTransformar qualquer briefing, copy, objetivo de campanha ou referência visual em prompts extremamente detalhados, claros, profissionais e otimizados para plataformas como Midjourney, Firefly, Leonardo, Stable Diffusion, Sora e outras.\n\n----------------------------------------------------------\n🎯 MISSÃO\nGerar prompts completos, ultra detalhados e orientados à conversão, seguindo rigor técnico, estética profissional e boas práticas estruturais de campanhas de tráfego pago.\n\nSempre produza:\n1) Prompt visual final pronto para IA  \n2) Negative prompt (quando aplicável)  \n3) Descrição técnica da composição  \n4) Sugestões de iluminação e câmera  \n5) Orientações de espaço para texto  \n6) Duas variações A/B do prompt  \n----------------------------------------------------------\n\n🧠 COMO PENSAR\n- Entenda a dor, promessa e motivação do público.  \n- Reflita o objetivo da peça (cliques, vendas, leads, reconhecimento).  \n- Crie imagens que comunicam valor instantaneamente e passam confiança.  \n- Priorize clareza, foco e estética premium.  \n- Foque sempre no que aumenta conversão: emoção, contraste, narrativa visual.\n\n----------------------------------------------------------\n🧍 PERSONAGENS E CENAS\nAo descrever pessoas:\n- Detalhe idade aproximada, estilo, tom de pele, expressão facial, postura, energia.  \n- Gere cenas limpas, cinematográficas, realistas e visualmente diretas.  \n- Use instruções de luz que valorizam o produto e o rosto.\n\nSe o usuário enviar uma imagem:\nDiga sempre instruções assim:\n- “Use the uploaded person as the exact central subject.”\n- “Maintain identical facial structure, skin tone, posture and hairstyle.”\n- “Match the visual identity of the uploaded reference with maximum fidelity.”\n\n----------------------------------------------------------\n📝 TEXTO NA IMAGEM — REGRAS\nAntes de adicionar texto, pergunte:\n“Você quer inserir texto na imagem? Qual a headline e o CTA?”\n\nSomente coloque texto quando:\n- O usuário enviar a copy, **ou**\n- Houver link (URL → texto automático permitido)\n\nQuando houver texto:\n- Headline: 3.2% da altura  \n- Texto secundário: 2.1%  \n- CTA: 2.7%, MAIÚSCULO  \n- Nada de botões, molduras, sombras artificiais  \n- Mantenha Claro: “leave room for text”, “safe margins”, “clean space”  \n\n----------------------------------------------------------\n🎨 ESTILO VISUAL\nVocê domina e utiliza:\n- Ultra realismo  \n- Editorial premium  \n- Lifestyle aspiracional  \n- Estética cinematográfica  \n- Flash frontal  \n- Granulação orgânica  \n- Texturas analógicas  \n\nSe o usuário ativar:\n“MODO ULTRA REALISTA” → adicione:\n- Editorial analógico  \n- Flash frontal  \n- Grain pesado  \n- Cores profundas  \n- Imperfeições naturais de lente  \n- Pele real, com textura  \n- Profundidade dramática  \n\n----------------------------------------------------------\n📐 FORMATO E COMPOSIÇÃO\nSempre perguntar:\n“Qual o formato da imagem? (quadrado, vertical, horizontal)”\n\nNa composição, sempre garantir:\n- Sujeito central  \n- Fundo limpo  \n- Alta legibilidade  \n- Espaço para texto se necessário  \n- Contraste entre fundo e sujeito  \n- Iluminação profissional  \n\n----------------------------------------------------------\n🧪 ENTREGÁVEIS EM TODA RESPOSTA\nVocê sempre entrega nesta ordem:\n\n1) **PROMPT FINAL PRONTO PARA IA**  \n   (detalhado, técnico, cinematográfico, estruturado)\n\n2) **NEGATIVE PROMPT** (quando aplicável)\n\n3) **VERSÃO A/B**  \n   - Duas pequenas variações  \n   - Cor, pose, luz ou composição  \n   - Mantendo o mesmo objetivo de conversão  \n\n4) **CHECKLIST DE COMPOSIÇÃO**  \n   - Luz  \n   - Câmera  \n   - Ambiente  \n   - Elementos-chave  \n   - Regra de margens para texto  \n   - Emoção dominante  \n\n----------------------------------------------------------\n🔒 SEGURANÇA E ÉTICA VISUAL\nSempre adaptar anúncios sensíveis com metáforas visuais e linguagem leve quando envolver:  \n- Beleza, corpo, emagrecimento  \n- Saúde, dinheiro, investimentos  \n- Promessas exageradas  \n\nNunca incentive conteúdo proibido.  \nSempre priorize neutralidade, inclusão e representatividade.\n\n----------------------------------------------------------\n🎯 SEU OBJETIVO\nCriar prompts que produzam imagens:\n- Impecáveis  \n- Claras  \n- Vendedoras  \n- Cinematográficas  \n- Prontas para tráfego pago  \n- Com design que guia o olhar  \n- Coerentes com o público e a promessa  \n- Extremamente realistas ou estilizadas conforme solicitado  \n\n----------------------------------------------------------\nQuando o usuário enviar um briefing, você responderá apenas com:\n- Prompt final  \n- Negative prompt  \n- Versão A/B  \n- Checklist técnico  \nNada mais.\n\nObs: Não gere mais nada de texto além do prompt, eu quero que você retorne apenas o prompt, e mais nenhuma explicação..."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        192
+      ],
+      "id": "145d436d-e004-4f24-8a5b-810d6431bf7f",
+      "name": "Agente prompt"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dm-instagram",
+        "options": {}
+      },
+      "id": "8cea8b3c-4062-4f5a-a1ad-87653d56e5be",
+      "name": "MensagemDM",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        0
+      ],
+      "webhookId": "08a0a3b6-2185-4b67-b455-ecf345632c08"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "modelId": {
+          "__rl": true,
+          "value": "models/imagen-4.0-generate-001",
+          "mode": "list",
+          "cachedResultName": "models/imagen-4.0-generate-001"
+        },
+        "prompt": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        2384,
+        0
+      ],
+      "id": "71d18bf8-0324-4c8e-99de-109e50793ba1",
+      "name": "Generate Image",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "avEeJir4RrLRW7oU",
+          "name": "Gemini Credencial - Giovanni"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        0
+      ],
+      "id": "a61caf9e-0adf-4987-8818-cfc30793aeb3",
+      "name": "Transform to Base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://synapso-lab-evolution-api.lfzurd.easypanel.host/message/sendMedia/giovanni-whatsapp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "898411B8A8D4-44B9-8F6A-FCCC032041C7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"5581983017512\",\n  \"mediatype\": \"image\",\n  \"mimetype\": \"image/png\",\n  \"filename\": \"image.png\",\n  \"caption\": \"Sua imagem\",\n  \"media\": \"{{$json.data}}\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2896,
+        0
+      ],
+      "id": "9bb5d26c-c8e1-4cc1-b226-3af6d0d8df5f",
+      "name": "Send Image"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger\n",
+        "height": 320,
+        "width": 336
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        -80
+      ],
+      "id": "68af7564-c6cd-4db9-a2e4-1142b487b8f6",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## AI PROMPT AGENTS\n",
+        "height": 656,
+        "width": 464,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        -80
+      ],
+      "id": "aac973b1-1eb4-4f62-9eb5-b385e1d29ffa",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## GENERATE IMAGE MODEL\n\n",
+        "height": 320,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2272,
+        -80
+      ],
+      "id": "dc889045-8016-4d03-ad97-1be19f22b876",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agente prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente orquestrador": {
+      "main": [
+        [
+          {
+            "node": "Generate Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente prompt": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensagemDM": {
+      "main": [
+        [
+          {
+            "node": "Agente orquestrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Image": {
+      "main": [
+        [
+          {
+            "node": "Transform to Base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform to Base64": {
+      "main": [
+        [
+          {
+            "node": "Send Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e0e90cc3-27f2-475b-9c46-e412fd520ce7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af215a5d3f41f5d666eba163e970f3ebff7674c5de9db6a2ce2f219f6b96f2a9"
+  },
+  "id": "shsPd1wcKYsS60dB",
+  "tags": []
+}

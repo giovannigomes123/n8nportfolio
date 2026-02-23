@@ -1,0 +1,1247 @@
+{
+  "name": "Ad Scraper Inteligente-Facebook, LinkedIn e Google Ads",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Code node (por item)\nconst nome = ($input.item.json['Nome da Empresa'] ?? '').toString().trim();\nlet site = ($input.item.json['Site da Empresa'] ?? '').toString().trim();\n\n// Normaliza para domínio simples\nsite = site\n  .replace(/^https?:\\/\\//i, '') // remove http/https\n  .replace(/^www\\./i, '')       // remove www.\n  .replace(/\\/.*$/, '')         // remove qualquer path\n  .toLowerCase();\n\nreturn {\n  json: {\n    company_name: nome,\n    domain: site || '',\n    max_results: 10,\n    time_period: 180,\n    country: \"BR\",\n    scrape_id: new Date().toISOString(),\n    apify_token: \"\"\n  }\n};"
+      },
+      "id": "4b8f945f-4efc-4816-9d0e-ce961de6288b",
+      "name": "Set Default Values1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1792,
+        1344
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        -1264,
+        1312
+      ],
+      "id": "a18ed12b-8e2d-4b05-9274-d9478b3322b7",
+      "name": "HTTP Request5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1552,
+        1312
+      ],
+      "id": "8e43f024-7542-4177-ac27-ae6cac8ef39b",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "GLvM7TtzCRSOOWWi",
+          "name": "Synapso Lab"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/AdwCDVyhFcWXQF9tg/runs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $('Set Default Values1').item.json.apify_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startUrls\": [\n    {\n      \"url\": \"https://www.linkedin.com/ad-library/search?accountOwner={{ $json.name }}&countries=BR&dateOption=last-180-days\"\n    }\n  ],\n  \"skipDetails\": false,\n  \"proxyConfiguration\": {\n    \"useApifyProxy\": true,\n    \"apifyProxyCountry\": \"US\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        1552
+      ],
+      "id": "a878dda3-a547-4f50-9344-b5efc381b97d",
+      "name": "HTTP Request6"
+    },
+    {
+      "parameters": {
+        "amount": 180
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        128,
+        1552
+      ],
+      "id": "83ed7b49-5253-430c-b0c1-5c1b3c04e32b",
+      "name": "Wait2",
+      "webhookId": "01dfad84-2860-475b-9840-db938817a6d9"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/datasets/{{ $('HTTP Request6').item.json.data.defaultDatasetId }}/items",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $('Set Default Values1').item.json.apify_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        304,
+        1552
+      ],
+      "id": "57208f2a-c1e3-4e47-86b0-211752df61ab",
+      "name": "HTTP Request8",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/anchor~linkedin-profile-enrichment/run-sync-get-dataset-items",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $('Set Default Values1').item.json.apify_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"startUrls\": [\n        {\n            \"url\": \"{{ $json.linkedin_url }}\",\n            \"id\": \"1\"\n        }\n    ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -368,
+        1552
+      ],
+      "id": "4f050b33-a400-4e9f-9d3f-eed1f50d8a53",
+      "name": "HTTP Request9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/JJghSZmShuco4j9gJ/runs",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $('Set Default Values1').item.json.apify_token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"startUrls\": [\n    {\n      \"url\": \"{{ $json.facebook_url }}\"\n    }\n  ],\n  \"resultsLimit\": 20,\n  \"activeStatus\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -448,
+        1056
+      ],
+      "id": "03ec7edc-e3ae-4974-80de-70deece370f4",
+      "name": "HTTP Request10"
+    },
+    {
+      "parameters": {
+        "amount": 45
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -240,
+        1056
+      ],
+      "id": "7130493c-b504-4342-b2bc-83a3d63de9ae",
+      "name": "Wait3",
+      "webhookId": "1cf55733-d435-4caf-a793-f37e45dcb750"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/datasets/{{ $json.data.defaultDatasetId }}/items?token={{ $('Set Default Values1').item.json.apify_token }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "={{ $('Set Default Values1').item.json.apify_token }}"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            },
+            {
+              "name": "clean",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -32,
+        1056
+      ],
+      "id": "12c512f8-dff3-4a54-adcc-4cfc2c59665b",
+      "name": "HTTP Request11"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "4d76cd96-48cd-40f4-b097-6b47ea7eebdb",
+              "leftValue": "={{ Object.keys($json).length === 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        480,
+        1552
+      ],
+      "id": "431acaec-e0c5-4efb-99d7-d03a1ff19cb0",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -192,
+        1552
+      ],
+      "id": "67f14eec-b48a-4b51-9e06-4eeba6cfb76e",
+      "name": "Wait4",
+      "webhookId": "207a4a17-9a73-4716-9366-e0b2e1682f9b"
+    },
+    {
+      "parameters": {
+        "formTitle": "Ads Scraper",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nome da Empresa"
+            },
+            {
+              "fieldLabel": "Site da Empresa"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -2000,
+        1344
+      ],
+      "id": "b825a93a-8234-469a-86e0-9b35b1875fc8",
+      "name": "Formulario",
+      "webhookId": "2e6c7c38-a1fe-442f-98bb-b868820392cc"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Empresa: {{ $json.company_name }}\nwebsite: {{ $('Formulario').item.json['Site da Empresa'] }}",
+        "options": {
+          "systemMessage": "Você é pesquisador na internet. \n\nSua tarefa é encontrar o URL da página do facebook de empresas com 100% de precisão. \n\nO que você deve fazer:\n\n1. Analisar os dados recebidos (nome e site da empresa)\n2. Entender o contexto sobre essa empresa, usando a tool HTTP request para ler o site da empresa (é só passar o url do site nessa tool no formato https://{site})\n3. Burcar na web pela página oficial do facebook (use a tool Tavily quantas vezes quiser, com qwerys como {{ $json.company_name }} verified site:facebook.com)\n4. Analisar os resultados e comparar com o contexto da empresa para garantir que encontrou a página correta. \n\n\nOutput:\nSeu output deve ser apenas o URL da página do facebook, quando você tem certeza de que encontrou. \nCaso não encontre, responda \"null\"\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1472,
+        1072
+      ],
+      "id": "bcf08641-8dcb-47af-8cdd-a9b3f7de4133",
+      "name": "AI Agent - Facebook Page"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Empresa: {{ $json.company_name }}\nwebsite: {{ $('Formulario').item.json['Site da Empresa'] }}",
+        "options": {
+          "systemMessage": "=Você é um pesquisador especializado em encontrar informações de empresas no LinkedIn.\n\nSua tarefa é encontrar o **nome de exibição correto** da empresa no LinkedIn Ads Library com 100% de precisão.\n\n## O que você deve fazer:\n\n### 1. Analisar os dados recebidos\n- Nome da empresa: {{ $json.company_name }}\n- Site da empresa: {{ $json.domain }}\n\n### 2. Entender o contexto da empresa\n- Use a tool HTTP request para ler o site da empresa (formato: https://{site.fornecido})\n- Identifique: segmento, produtos/serviços principais, mercado de atuação\n\n### 3. Buscar a página oficial do LinkedIn\nUse a tool Tavily para encontrar a página da empresa no LinkedIn com queries como:\n- \"{{ $json.company_name }} company site:linkedin.com/company\"\n- \"{{ $json.company_name }} {{ $json.domain }} site:linkedin.com/company\"\n- \"{{ $json.domain }} linkedin company page\"\n\n### 4. Validar a página encontrada\n- IMPORTANTE: Deve ser página de EMPRESA (/company/) e NÃO perfil pessoal (/in/)\n- O URL deve estar no formato: https://linkedin.com/company/nome-slug\n- Confirme que o contexto da página corresponde à empresa pesquisada\n\n\n## Output Obrigatório:\n\nVocê deve retornar APENAS o URL da companypage, mais nada\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1488,
+        1568
+      ],
+      "id": "a75ff526-1bcc-40ef-936d-d9fbff5963f7",
+      "name": "AI Agent - Linkedin Page"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e842ce6d-300d-4355-903a-2db97f854538",
+              "name": "facebook_url",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1120,
+        1072
+      ],
+      "id": "2b1905b5-5d07-4b66-a472-6a72c5229ff6",
+      "name": "Edit Fields - Get Facebook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d533f2f1-290d-443b-8fb7-ef69a023e432",
+              "name": "linkedin_url",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1136,
+        1568
+      ],
+      "id": "5ba1c1fc-7c62-4903-8e4e-16bf4f8e7748",
+      "name": "Edit Fields - Get LinkedIn"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "87f6303e-049a-4307-92df-bb7eeb228ff9",
+              "leftValue": "={{ $json.facebook_url }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -736,
+        1072
+      ],
+      "id": "2c299be9-81be-40df-9bfe-5069952db90b",
+      "name": "Facebook Found?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9d24611d-6ed2-4ccd-b33a-1626a11168bf",
+              "leftValue": "={{ $json.linkedin_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        1568
+      ],
+      "id": "60b50c12-b044-4ad6-b6ab-c4f7eeba513c",
+      "name": "Linkedin Found?"
+    },
+    {
+      "parameters": {
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        -1392,
+        1312
+      ],
+      "id": "38bc954b-3be7-4d0b-9a6a-05793c58e9c6",
+      "name": "Search in Tavily",
+      "credentials": {
+        "tavilyApi": {
+          "id": "QBmsiJBa0cJYVmrZ",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1c-8MDk5rQMwdlb6Hb7m2TLeKmxNm29aKpuudsummmg4",
+          "mode": "list",
+          "cachedResultName": "[DEMO] Ads Scraper",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c-8MDk5rQMwdlb6Hb7m2TLeKmxNm29aKpuudsummmg4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Meta",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c-8MDk5rQMwdlb6Hb7m2TLeKmxNm29aKpuudsummmg4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company_name": "={{ $json.pageInfo.page.name }}",
+            "cta": "={{ $json.snapshot.cards[0].ctaText }}",
+            "destination_url": "={{ $json.snapshot.cards[0].linkUrl }}",
+            "ad_id": "={{ $json.adArchiveId }}",
+            "start_date": "={{ $json.startDateFormatted }}",
+            "end_date": "={{ $json.endDateFormatted }}",
+            "caption": "=",
+            "body_text": "={{ $json.snapshot.body.text }}",
+            "platforms": "={{ $json.publisherPlatform }}",
+            "headline": "={{ $json.snapshot.cards[1].title }}",
+            "image_formula": "={{ $json.snapshot.cards[1].originalImageUrl }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ad_id",
+              "displayName": "ad_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "start_date",
+              "displayName": "start_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "end_date",
+              "displayName": "end_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "is_active",
+              "displayName": "is_active",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "headline",
+              "displayName": "headline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "body_text",
+              "displayName": "body_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cta",
+              "displayName": "cta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destination_url",
+              "displayName": "destination_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "caption",
+              "displayName": "caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "media_type",
+              "displayName": "media_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "thumbnail_url",
+              "displayName": "thumbnail_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image_formula",
+              "displayName": "image_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platforms",
+              "displayName": "platforms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ad_library_url",
+              "displayName": "ad_library_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "scraped_at",
+              "displayName": "scraped_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "scrape_id",
+              "displayName": "scrape_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        1072
+      ],
+      "id": "b8c0f5fe-16ba-43d8-83e1-310a8f755f97",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "479PdELkIbVgs67c",
+          "name": "Google Sheets - Giovanni"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        384,
+        1056
+      ],
+      "id": "ef4f1c3b-f430-4177-bfd4-c509ca8dde03",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1c-8MDk5rQMwdlb6Hb7m2TLeKmxNm29aKpuudsummmg4",
+          "mode": "list",
+          "cachedResultName": "[DEMO] Ads Scraper",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c-8MDk5rQMwdlb6Hb7m2TLeKmxNm29aKpuudsummmg4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 936914661,
+          "mode": "list",
+          "cachedResultName": "Linkedin",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1c-8MDk5rQMwdlb6Hb7m2TLeKmxNm29aKpuudsummmg4/edit#gid=936914661"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "advertiser_logo": "={{ $json.advertiserLogo }}",
+            "ad_id": "={{ $json.adId }}",
+            "company_name": "={{ $json.advertiserName }}",
+            "media_type": "={{ $json.format }}",
+            "paid_by": "={{ $json.paidBy }}",
+            "body_text": "={{ $json.body }}",
+            "cta": "={{ $json.ctas }}",
+            "media_url": "={{ $json.videoUrl }}",
+            "advertiser_url": "={{ $json.advertiserUrl }}",
+            "image_formula": "={{ $json.videoUrl }}",
+            "ad_library_url": "={{ $json.startUrl }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "advertiser_logo",
+              "displayName": "advertiser_logo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ad_id",
+              "displayName": "ad_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "platform",
+              "displayName": "platform",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "headline",
+              "displayName": "headline",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "body_text",
+              "displayName": "body_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cta",
+              "displayName": "cta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destination_url",
+              "displayName": "destination_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "media_type",
+              "displayName": "media_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "media_url",
+              "displayName": "media_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "thumbnail_url",
+              "displayName": "thumbnail_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image_formula",
+              "displayName": "image_formula",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "advertiser_url",
+              "displayName": "advertiser_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ad_library_url",
+              "displayName": "ad_library_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "paid_by",
+              "displayName": "paid_by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "scraped_at",
+              "displayName": "scraped_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "scrape_id",
+              "displayName": "scrape_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "scraped_at",
+              "displayName": "scraped_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "scrape_id",
+              "displayName": "scrape_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        1584
+      ],
+      "id": "11a9054b-cc71-411b-a8ee-752f676889b9",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "479PdELkIbVgs67c",
+          "name": "Google Sheets - Giovanni"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        752,
+        1568
+      ],
+      "id": "b48e2e74-a3a8-4e68-a7fc-cee4fc05d7ba",
+      "name": "Loop Over Items1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Set Default Values1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Facebook Page",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Linkedin Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Facebook Page",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Linkedin Page",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Facebook Page",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Linkedin Page",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request8": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request9": {
+      "main": [
+        [
+          {
+            "node": "Wait4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request10": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request11": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait4": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formulario": {
+      "main": [
+        [
+          {
+            "node": "Set Default Values1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Facebook Page": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Get Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Linkedin Page": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Get LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Get Facebook": {
+      "main": [
+        [
+          {
+            "node": "Facebook Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Get LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Linkedin Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Found?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Linkedin Found?": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent - Facebook Page",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent - Linkedin Page",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "dec00085-b7e7-495a-9628-c68bc3a24c5a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af215a5d3f41f5d666eba163e970f3ebff7674c5de9db6a2ce2f219f6b96f2a9"
+  },
+  "id": "JVHK9S2j4prgeK9n",
+  "tags": []
+}

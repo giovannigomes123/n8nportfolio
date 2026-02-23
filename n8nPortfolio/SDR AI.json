@@ -1,0 +1,1517 @@
+{
+  "name": "Synapso SDR AI",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.guardrailsInput }}",
+        "options": {
+          "systemMessage": "Você é o Agente SDR da Synapso Lab, responsável por conduzir uma qualificação inicial curta, clara e humana via WhatsApp.\n\nSeu objetivo é:\n\nEntender rapidamente se a empresa do contato é um ICP da Synapso Lab\n\nIdentificar se faz sentido seguir com automação ou encaminhar para atendimento humano\n\nRegistrar corretamente as informações usando as tools disponíveis\n\nVocê não vende, não promete, não explica soluções técnicas.\nVocê faz perguntas inteligentes, uma de cada vez, e observa sinais.\n\nCONTEXTO DA SYNAPSO LAB (use internamente)\n\nA Synapso ajuda empresas a:\n\nAutomatizar processos operacionais e comerciais\n\nReduzir retrabalho, erro manual e sobrecarga de times\n\nIntegrar sistemas como CRM, WhatsApp, planilhas e ferramentas internas\n\nCriar agentes e automações com impacto real, começando por MVPs\n\nICP típico da Synapso:\n\nEmpresa B2B ou operação estruturada\n\nTime pequeno ou médio, mas já operando\n\nProcessos manuais, repetitivos ou quebrados\n\nInteresse em ganhar eficiência, não apenas “testar IA”\n\nNão é agência de automação, software concorrente ou consultoria técnica similar\n\nREGRAS DE CONVERSA\n\nFaça UMA pergunta por vez\n\nLinguagem simples, natural, sem jargão técnico\n\nSeja educado, direto e objetivo\n\nNão interrogue. Conduza como conversa\n\nSe o usuário demonstrar confusão, urgência, frustração ou pedir alguém humano, escale\n\nFLUXO DE QUALIFICAÇÃO (OBRIGATÓRIO)\n1. Abertura\n\nComece sempre assim:\n\nOi, tudo certo?\nPra eu te ajudar melhor, posso te fazer algumas perguntas rápidas sobre a sua empresa?\n\nSe a pessoa recusar → marque Not_ICP = True e finalize educadamente.\n\n2. Nome da empresa\n\nPergunta:\n\nQual é o nome da empresa hoje?\n\nQuando responder:\n\nUse a tool Insert_empresa com o nome informado\n\n3. Tamanho ou estrutura\n\nPergunta (escolha essa exatamente):\n\nHoje a empresa tem mais ou menos quantas pessoas no time?\n\nInterpretação:\n\nSe for 1 pessoa ou “só eu” → ainda continue\n\nSe for muito grande, continue normalmente\n\nApenas observe, não classifique ainda\n\n4. Dor principal (pergunta chave)\n\nPergunta:\n\nQual é hoje a parte mais chata ou manual da operação que mais toma tempo do time?\n\nEssa pergunta é central.\nAvalie se a resposta indica:\n\nretrabalho\n\nplanilhas\n\nfollow up\n\ndados bagunçados\n\natendimento manual\n\nprocessos repetitivos\n\n5. Critério de exclusão (concorrente)\n\nPergunta leve, sem acusar:\n\nSó pra alinhar, vocês atuam com automação, desenvolvimento de agentes ou serviços parecidos com isso?\n\nSe SIM →\n\nUse Not_ICP = True\n\nResponda educadamente encerrando\n\nDECISÕES E TOOLS\nMarcar como NOT ICP\n\nUse a tool Not_ICP = True quando:\n\nFor concorrente direto\n\nFor curioso sem empresa\n\nFor estudante ou teste\n\nNão existir problema operacional real\n\nPessoa não quiser responder nada\n\nEscalar para humano\n\nUse Atendimento_Humano = True e depois Chamar_Humano quando:\n\nA pessoa demonstrar urgência clara\n\nPedir para falar com alguém\n\nFalar em projeto ativo ou problema crítico\n\nDemonstrar frustração com operação atual\n\nMostrar fit forte e interesse direto\n\nMensagem antes de chamar humano:\n\nPerfeito, faz bastante sentido.\nVou chamar alguém do time pra seguir com você e entender melhor, ok?\n\nFINALIZAÇÃO PADRÃO (SE NÃO ESCALAR)\n\nSe parecer ICP, mas sem urgência:\n\nObrigado por compartilhar.\nCom base no que você me contou, faz sentido sim a gente olhar isso com mais calma.\nSe você quiser, posso chamar alguém do time pra conversar quando for melhor pra você.\n\nSe não parecer ICP:\n\nEntendi. Pelo que você me contou, talvez agora não seja o melhor momento.\nDe qualquer forma, obrigado por responder e sucesso por aí.\n\nPOSTURA DO AGENTE\n\nSeja analítico, mas humano\n\nNunca force venda\n\nNunca explique solução\n\nNunca discuta preço\n\nSeu valor está nas perguntas, não nas respostas"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1056,
+        992
+      ],
+      "id": "18f78067-e6b0-45d4-a7e5-64e95f6cd6c9",
+      "name": "Agente Orquestrador"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -1056,
+        1264
+      ],
+      "id": "ad8ff855-d1e0-4b55-942c-86342eaa28bf",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "JxsIX10jkm7nYZpe",
+          "name": "Redis synapso"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.MensagemPicotada }}",
+        "messageData": "={{ $json.mensagem }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        1024
+      ],
+      "id": "5ee65704-1ebd-44af-a352-1c5b3441ef31",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "JxsIX10jkm7nYZpe",
+          "name": "Redis synapso"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea64d323-8d25-4eb3-b40f-1204d0ab14be",
+              "name": "MensagemPicotada",
+              "value": "=msgPicotada{{ $('Webhook1').item.json.body.data.key.remoteJid }} ",
+              "type": "string"
+            },
+            {
+              "id": "ccd1e4b8-a1f8-4fd7-9fba-d8f7d0449661",
+              "name": "mensagem",
+              "value": "={{ $json.texto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2832,
+        1024
+      ],
+      "id": "7d1788c0-15ea-4643-8cbf-eef5382c6d80",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2480,
+        1024
+      ],
+      "id": "c8ff50b6-fe22-4924-9dfe-71bed593ca6e",
+      "name": "Wait",
+      "webhookId": "98fb0189-60bf-48a2-b3eb-07012a1ae2b2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "msgFinal",
+        "key": "={{ $('Edit Fields').item.json.MensagemPicotada }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2256,
+        1024
+      ],
+      "id": "6bc1fa09-0960-4493-87a1-88449cfd8d94",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "JxsIX10jkm7nYZpe",
+          "name": "Redis synapso"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields').item.json.MensagemPicotada }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        1008
+      ],
+      "id": "23b9e4c4-e16c-410c-bde5-413ddfb9d48a",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "JxsIX10jkm7nYZpe",
+          "name": "Redis synapso"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b03ea4e6-2a07-4a84-9378-2799178c64ed",
+              "leftValue": "={{ $json.msgFinal.last() }}",
+              "rightValue": "={{ $('Wait').item.json.mensagem }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2048,
+        1024
+      ],
+      "id": "3ce87fca-b1ee-45b1-b9f1-c752860e2ecc",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "beb77b21-6257-4ef3-96d4-ff29e50fa37a",
+              "name": "msgFinal",
+              "value": "={{ $json.msgFinal.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1824,
+        1008
+      ],
+      "id": "b639bfba-fdf7-40d9-bc3b-1955786c89c9",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "Mensagem-Whatsapp",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -5392,
+        800
+      ],
+      "id": "15e7793b-be76-4a31-9df2-e48c29a2c4a5",
+      "name": "Webhook1",
+      "webhookId": "422795d8-6c53-4e6c-a097-3c9a7c56f77c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0e4f1412-c84a-4f1e-8795-87e4fb8ec4e3",
+              "leftValue": "={{ $json.Whatsapp }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4640,
+        816
+      ],
+      "id": "343240d3-3219-48a2-a0d7-eb441f2675a9",
+      "name": "If2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tq6sSVwJYwHYwZdd",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "/projects/D7NhpSgh7G5egEpp/datatables/tq6sSVwJYwHYwZdd"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Whatsapp",
+              "keyValue": "={{ $json.body.data.key.remoteJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -4880,
+        816
+      ],
+      "id": "80826112-8602-482d-9ae5-436a3da1921d",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "tq6sSVwJYwHYwZdd",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "/projects/D7NhpSgh7G5egEpp/datatables/tq6sSVwJYwHYwZdd"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Nome": "={{ $('Webhook1').item.json.body.data.pushName }}",
+            "Whatsapp": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Whatsapp",
+              "displayName": "Whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ICP",
+              "displayName": "ICP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AtendimentoHumano",
+              "displayName": "AtendimentoHumano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -4320,
+        672
+      ],
+      "id": "c23c011b-8ea2-4721-ac34-f69126196984",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0dbe45d9-bf96-4bcd-ae66-92ad05101ee9",
+              "leftValue": "={{ $('Webhook1').item.json.body.data.messageType }}",
+              "rightValue": "audioMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4016,
+        768
+      ],
+      "id": "190b8a4e-ae6b-4e57-8307-feec94aa7a18",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -3232,
+        752
+      ],
+      "id": "c21b1c04-5dfb-411d-8e02-11857e729bea",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "GLvM7TtzCRSOOWWi",
+          "name": "Synapso Lab"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "fileName": "audio.mp3",
+          "mimeType": "audio/mpeg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -3408,
+        752
+      ],
+      "id": "8b39dfcc-8c43-43fb-a51f-314f6bf388aa",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a47f146b-e6a1-4a73-b540-091b03c33669",
+              "name": "base64",
+              "value": "={{ $('Webhook1').item.json.body.data.message.base64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3600,
+        752
+      ],
+      "id": "5fa12dcc-6010-4769-87bc-820d0fceb935",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "={{ $json.text || $('Webhook1').item.json.body.data.message.conversation }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3024,
+        1024
+      ],
+      "id": "687856b2-c890-4c80-8722-89d0faedd5d8",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f823fa24-50c3-4a42-983b-7717488fe293",
+              "leftValue": "={{ $json.AtendimentoHumano }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "1c11ac93-3d4a-4f8c-adef-30867c686229",
+              "leftValue": "={{ $json.ICP }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4320,
+        912
+      ],
+      "id": "c6cd78e2-1c60-464c-a723-4f71a6a54a35",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tq6sSVwJYwHYwZdd",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "/projects/D7NhpSgh7G5egEpp/datatables/tq6sSVwJYwHYwZdd"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Whatsapp",
+              "keyValue": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Empresa": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Empresa', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp",
+              "displayName": "Whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ICP",
+              "displayName": "ICP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AtendimentoHumano",
+              "displayName": "AtendimentoHumano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        -848,
+        1376
+      ],
+      "id": "08e5fd79-582f-424d-96c4-fb3a267fa8cb",
+      "name": "Insert_empresa"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tq6sSVwJYwHYwZdd",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "/projects/D7NhpSgh7G5egEpp/datatables/tq6sSVwJYwHYwZdd"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Whatsapp",
+              "keyValue": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ICP": false
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp",
+              "displayName": "Whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ICP",
+              "displayName": "ICP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AtendimentoHumano",
+              "displayName": "AtendimentoHumano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        -960,
+        1376
+      ],
+      "id": "9f3b42f3-4463-4f29-ae0f-97fc2fd03a27",
+      "name": "Not_ICP"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tq6sSVwJYwHYwZdd",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "/projects/D7NhpSgh7G5egEpp/datatables/tq6sSVwJYwHYwZdd"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Whatsapp",
+              "keyValue": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "AtendimentoHumano": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp",
+              "displayName": "Whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ICP",
+              "displayName": "ICP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "AtendimentoHumano",
+              "displayName": "AtendimentoHumano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        1376
+      ],
+      "id": "09b44643-44d5-4e57-9ee8-1a98e560d3ae",
+      "name": "Atendimento_Humano"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.msgFinal }}",
+        "guardrails": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        1008
+      ],
+      "id": "9e1a41d2-30a6-4b16-aee5-f35140b664e9",
+      "name": "Guardrails"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://synapso-lab-evolution-api.lfzurd.easypanel.host/message/sendText/giovanni-whatsapp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "898411B8A8D4-44B9-8F6A-FCCC032041C7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $json.jid }}\",\n  \"text\": {{ $json.message.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4880,
+        1296
+      ],
+      "id": "f1b9bb5e-41c3-4346-8adb-8bb4eb4f02a8",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Chame esta tool quando precisar de um atendimento humano, após usar a tool \"Atendimento_Humano\"",
+        "method": "POST",
+        "url": "https://synapso-lab-evolution-api.lfzurd.easypanel.host/message/sendText/giovanni-whatsapp",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "898411B8A8D4-44B9-8F6A-FCCC032041C7"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"5581986820206\",\n  \"text\": \"O lead {{ $('Webhook1').item.json.body.data.pushName }} precisa de atendimento humano no whatsapp da Synapso\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        -544,
+        1376
+      ],
+      "id": "490e19bd-3b64-48af-9626-a067e86c4322",
+      "name": "Chamar_Humano"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "tq6sSVwJYwHYwZdd",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "/projects/D7NhpSgh7G5egEpp/datatables/tq6sSVwJYwHYwZdd"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Whatsapp",
+              "keyValue": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ICP": true
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Whatsapp",
+              "displayName": "Whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Empresa",
+              "displayName": "Empresa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ICP",
+              "displayName": "ICP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AtendimentoHumano",
+              "displayName": "AtendimentoHumano",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -1296,
+        1424
+      ],
+      "id": "0bf5dd21-edd0-43a7-8a82-505a8f654cae",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.1",
+          "mode": "list",
+          "cachedResultName": "gpt-5.1"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1168,
+        1136
+      ],
+      "id": "af64a3d8-b8cf-42ff-beae-db16da947913",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "GLvM7TtzCRSOOWWi",
+          "name": "Synapso Lab"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1ff604fd-1ad1-4403-91b0-c2255232f38a",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "552120181195@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "125c3d05-0be6-4dc1-9600-a14dd28b1ead",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "558188488003@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "45e13846-0230-4335-a7c4-3a35638a30ca",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "558199931707@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "7c2dbff7-d3d6-4397-b22c-c211f0c6cbf1",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "558187242039@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d18ac45a-1978-48f2-94d4-29a3305f37ae",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "558186820206@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "710bd692-c5ec-4f8f-8c04-e27476c4f2c7",
+              "leftValue": "={{ $json.body.data.key.remoteJid }}",
+              "rightValue": "558197963596@s.whatsapp.net",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -5152,
+        800
+      ],
+      "id": "08ce58e8-7ab6-453e-8151-2b94313db364",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "queue": "synapso-queue",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmq",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        992
+      ],
+      "id": "135d4bc4-ac2d-4eca-ada6-1b606a9dcd92",
+      "name": "RabbitMQ",
+      "credentials": {
+        "rabbitmq": {
+          "id": "JGBGpTG4aihzSyXG",
+          "name": "RabbitMQ account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "queue": "synapso-queue",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmqTrigger",
+      "typeVersion": 1,
+      "position": [
+        -5392,
+        1296
+      ],
+      "id": "fa938ec2-b58a-4e3f-8737-d1a1879fee20",
+      "name": "RabbitMQ Trigger",
+      "credentials": {
+        "rabbitmq": {
+          "id": "JGBGpTG4aihzSyXG",
+          "name": "RabbitMQ account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1a940269-d0f7-42ba-80ae-58e698691c33",
+              "name": "numeroWhatsapp",
+              "value": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}",
+              "type": "string"
+            },
+            {
+              "id": "9ccd39d4-91a6-4e64-bff5-38f29b1373f7",
+              "name": "mensagemAgente",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -576,
+        992
+      ],
+      "id": "679f1341-4e8f-4589-a043-ad97742653e3",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  // 1) Parse do conteúdo vindo do RabbitMQ\n  const parsed = JSON.parse(item.json.content);\n\n  // 2) Monta o JSON final\n  return {\n    json: {\n      jid: parsed.numeroWhatsapp,\n      message: parsed.mensagemAgente\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5136,
+        1296
+      ],
+      "id": "a58bbc77-34fe-4633-adfe-6415a1f12028",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Agente Orquestrador": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert row": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert_empresa": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Not_ICP": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atendimento_Humano": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrails": {
+      "main": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chamar_Humano": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RabbitMQ": {
+      "main": [
+        []
+      ]
+    },
+    "RabbitMQ Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "RabbitMQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 60
+  },
+  "versionId": "656ac879-f7a7-447d-ba6c-cdc9a8f08ebd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "af215a5d3f41f5d666eba163e970f3ebff7674c5de9db6a2ce2f219f6b96f2a9"
+  },
+  "id": "UmKC9sJitgNF8ILaRUswv",
+  "tags": []
+}

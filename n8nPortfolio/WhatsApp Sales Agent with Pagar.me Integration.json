@@ -1,0 +1,1174 @@
+{
+  "name": "WhatsApp Sales Agent with Pagar.me Integration",
+  "nodes": [
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -384,
+        1056
+      ],
+      "id": "219a768e-b544-4811-baab-f8b36cff7f61",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "6vvW6ivwYtIZPXCn",
+          "name": "OpenAi Giovanni Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.guardrailsInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Você é a Inteligência Artificial de atendimento e vendas da loja Djany Cosméticos.\n\nSeu objetivo é conduzir todo o processo de compra de forma clara, rápida e amigável, pelo WhatsApp, desde o primeiro contato até a confirmação do pagamento.\n\nRegras gerais:\n- Seja educado, profissional e acolhedor.\n- Use linguagem simples, objetiva e natural.\n- Nunca invente produtos, preços ou informações.\n- Sempre confirme escolhas importantes com o cliente.\n- Mantenha o controle do estado da conversa (produtos escolhidos, valores, etapa do pedido).\n- Caso algo não seja possível resolver ou o usuário só quiser um atendimento humano, direcione para atendimento humano (usando a tool \"Atendimento_Humano\") e avise que vai chamar um humano.\n\nFluxo de atendimento:\n\n1. Atendimento inicial\n- Cumprimente o cliente.\n- Apresente a Djany Cosméticos.\n- Explique brevemente que pode ajudar a consultar produtos, montar pedidos e finalizar a compra.\n\n2. Consulta de produtos\n- Identifique quando o cliente pedir informações sobre um produto por nome ou categoria.\n- Acione a tool do \"InformacaoProduto\" e peça para ela fazer a busca.\n- Retorne os produtos encontrados por ela com:\n  • Foto\n  • Nome\n  • Marca (se houver)\n  • Valor\n- Caso existam várias opções, apresente todas e solicite que o cliente escolha.\n\n3. Construção do carrinho\n- O cliente vai escolher os produtos, e mandar pra você.\n- Quando você receber os produtos, você vai chamar a tool \"AdicionarNoCarrinho\" e vai adicionar no carrinho os produtos, as quantidades e o valor de cada produto\n- Caso o cliente queira remover um item do carrinho, chame a tool \"RemoverdoCarrinho\" para remover o item do carrinho.\n\n4. Entrega ou retirada\n- Pergunte se o cliente prefere:\n  • Entrega em domicílio (coletar endereço e chamar a tool \"ConsultaFrete\" para ver o frete)\n  • Retirada no ponto físico\n- Chame a tool \"UsuarioCompras\" e atualize o valor  total com a soma de todos os produtos do carrinho (você vai chamar a tool \"Carrinho\" para saber todos os produtos e as quantidades) e atualizar o valor total junto com o valor do frete.\n- Pergunte se o cliente vai que\n\n6. Pagamento\n- Após confirmação total do pedido:\n  • Pergunte se o cliente vai querer pagamento via pix ou cartão\n  • Depois chame a Tool \"BuscarDadosTotais\" para pegar o valor total do\n  • Peça para que ele gere o valor final, acione a integração com o Pagar.me e envie o link de pagamento via WhatsApp\n- Informe que o pagamento pode ser feito via Pix ou cartão de crédito.\n\n7. Finalização\n- Após confirmação do pagamento (quando o usuário enviar a imagem ou o pdf do pix):\n  • Chame a tool \"ConfirmarPagamento\" para confirmar o pagamento no CRM\n  • Chame a tool \" \" para enviar os dados de pagamento para o CRM\n  • Confirme a compra para o cliente\n  • Informe que o pedido foi registrado\n  • Agradeça o cliente\n- Pergunte se deseja mais alguma coisa ou encerrar o atendimento.\n\nImportante:\n- Nunca avance etapas sem confirmação do cliente.\n- Sempre mantenha clareza sobre valores.\n- Caso o cliente demonstre confusão ou problema no pagamento, ou queira uma ajuda ou atendimento humano, chame a tool \"Atendimento_Humano\" para ter um atendimento humano.\n\n\nRegra para responder o output:\n\nVocê sempre vai responder por meio de um Json. Ali você vai dizer se a sua resposta é uma imagem ou não (por exemplo se vc chamou a tool de imagem) e vai colocar true ou false. \nApós isso você vai colocar a url da imagem (se tiver), se não tiver nenhuma você vai deixar vazio.\nApós isso você vai digitar a response, que é a sua resposta em texto (se for a sua mensagem normal, ou se for legenda da imagem)."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -384,
+        16
+      ],
+      "id": "32dbaeff-03c1-42ba-941a-fb55034f31b1",
+      "name": "Agente Orquestrador"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "709e9050-3415-432f-882d-fa00350134ff",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -4608,
+        -208
+      ],
+      "id": "5f70dccb-3f65-4d6a-8cbe-f2da1cc29289",
+      "name": "Webhook1",
+      "webhookId": "709e9050-3415-432f-882d-fa00350134ff"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0dbe45d9-bf96-4bcd-ae66-92ad05101ee9",
+              "leftValue": "={{ $('Webhook1').item.json.body.data.messageType }}",
+              "rightValue": "audioMessage",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3152,
+        -208
+      ],
+      "id": "44714ee1-d9d5-4364-ac50-ca9621221e9d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -2480,
+        -224
+      ],
+      "id": "1a2f0755-e6aa-4046-bf0c-19e79e25e252",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "6vvW6ivwYtIZPXCn",
+          "name": "OpenAi Giovanni Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64",
+        "options": {
+          "fileName": "audio.mp3",
+          "mimeType": "audio/mpeg"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -2656,
+        -224
+      ],
+      "id": "c96d7776-8c95-439b-88bf-63a095c02a1e",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a47f146b-e6a1-4a73-b540-091b03c33669",
+              "name": "base64",
+              "value": "={{ $('Webhook1').item.json.body.data.message.base64 }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2848,
+        -224
+      ],
+      "id": "306dbab9-d2ea-4aaf-9047-cbb01acf064a",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "={{ $json.text || $('Webhook1').item.json.body.data.message.conversation }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2256,
+        48
+      ],
+      "id": "0c0e01ba-875b-440c-8f8b-3bd5211b5a76",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.MensagemPicotada }}",
+        "messageData": "={{ $json.mensagem }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1856,
+        48
+      ],
+      "id": "999fa874-212b-4ca2-ac55-ecd2930f00e7",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea64d323-8d25-4eb3-b40f-1204d0ab14be",
+              "name": "MensagemPicotada",
+              "value": "=msgPicotada{{ $('Webhook1').item.json.body.data.key.remoteJid }} ",
+              "type": "string"
+            },
+            {
+              "id": "ccd1e4b8-a1f8-4fd7-9fba-d8f7d0449661",
+              "name": "mensagem",
+              "value": "={{ $json.texto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2048,
+        48
+      ],
+      "id": "ec419d0f-60bf-4c4a-8921-d0d79786d3d4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -1696,
+        48
+      ],
+      "id": "2d975189-de0f-4fb4-bd27-7e4dd5e65542",
+      "name": "Wait",
+      "webhookId": "f8e7e2af-9187-414a-9e97-dab735f72ae4"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "msgFinal",
+        "key": "={{ $('Edit Fields').item.json.MensagemPicotada }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1472,
+        48
+      ],
+      "id": "d9ad4e3e-0a42-4583-ae5d-73c8a179a8dc",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields').item.json.MensagemPicotada }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        32
+      ],
+      "id": "981ec8d5-7fd4-4383-9ead-8138b735a54a",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b03ea4e6-2a07-4a84-9378-2799178c64ed",
+              "leftValue": "={{ $json.msgFinal.last() }}",
+              "rightValue": "={{ $('Wait').item.json.mensagem }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1264,
+        48
+      ],
+      "id": "e3152e2f-b27b-4e2d-a97c-9b6bc7386a07",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "beb77b21-6257-4ef3-96d4-ff29e50fa37a",
+              "name": "msgFinal",
+              "value": "={{ $json.msgFinal.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1040,
+        32
+      ],
+      "id": "0ee00395-ad93-4492-b921-2698178c26e9",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.msgFinal }}",
+        "guardrails": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        32
+      ],
+      "id": "63548b42-d70a-403d-9662-4ae32623e44a",
+      "name": "Guardrails1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        -304,
+        368
+      ],
+      "id": "11a333d3-1121-4038-a416-31d76df1592f",
+      "name": "Redis Memory - Agente Orquestrador",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-evolution-api.59uqo2.easypanel.host/message/sendText/clicktest",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "C924E5A5EB12-44A3-88B2-1A7D0D65C46D"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": \"{{ $('Webhook1').item.json.body.data.key.remoteJid }}\",\n  \"text\": {{ $json.output.response.toJsonString() }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        528,
+        0
+      ],
+      "id": "355c4909-cb96-4d3a-9f2f-9b658c893a47",
+      "name": "Responder_Mensagem"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -4640,
+        1392
+      ],
+      "id": "62cdc044-c748-4454-8721-398841d8a578",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "value": "kAMgeaywctkLagPF",
+          "mode": "list",
+          "cachedResultName": "Esperar_Atendimento",
+          "cachedResultUrl": "/projects/NYFRZ0tUhlC2v6K6/datatables/kAMgeaywctkLagPF"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "condition": "isNotEmpty"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -4432,
+        1392
+      ],
+      "id": "1ce16bea-9ec1-49cd-879a-c6d5e1d37986",
+      "name": "Delete row(s)"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "kAMgeaywctkLagPF",
+          "mode": "list",
+          "cachedResultName": "Esperar_Atendimento",
+          "cachedResultUrl": "/projects/NYFRZ0tUhlC2v6K6/datatables/kAMgeaywctkLagPF"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Whatsapp": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}",
+            "Nome": "={{ $('Webhook1').item.json.body.data.pushName }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Whatsapp",
+              "displayName": "Whatsapp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTableTool",
+      "typeVersion": 1.1,
+      "position": [
+        -128,
+        368
+      ],
+      "id": "0d4a5a45-89e8-466c-af52-e2c728c1e939",
+      "name": "Atendimento_Humano"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "kAMgeaywctkLagPF",
+          "mode": "list",
+          "cachedResultName": "Esperar_Atendimento",
+          "cachedResultUrl": "/projects/NYFRZ0tUhlC2v6K6/datatables/kAMgeaywctkLagPF"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "Whatsapp",
+              "keyValue": "={{ $json.body.data.key.remoteJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        -4384,
+        -208
+      ],
+      "id": "12bae1f6-8a76-4939-9e63-c2612bc4a120",
+      "name": "Get row(s)",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "35caa961-b2b5-4297-b3d6-be687d2f61bb",
+              "leftValue": "={{ $json.Whatsapp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -4176,
+        -208
+      ],
+      "id": "64066362-d551-4acc-a005-3c0dd0eab76e",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"image\": \"false or true\",\n    \"urlImage\": \"urldaimagem ou campo vazio\",\n\t\"response\": \"Resposta do agente ou descrição da imagem/produto\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        352
+      ],
+      "id": "703daff4-8e5e-42ed-b234-a0de70b70243",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f56028eb-a021-4103-bc32-74880df0eb2f",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -32,
+        16
+      ],
+      "id": "58732aaf-46de-4142-872d-bbfa08dc940b",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pagar.me/core/v5/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"closed\": true,\n  \"items\": [\n    {\n      \"code\": \"PROD01\",\n      \"description\": \"Produto\",\n      \"amount\": 1000,\n      \"quantity\": 1\n    }\n  ],\n  \"customer\": {\n    \"name\": \"João da Silva\",\n    \"email\": \"joao@email.com\",\n    \"document\": \"12345678909\",\n    \"type\": \"individual\",\n    \"phones\": {\n      \"mobile_phone\": {\n        \"country_code\": \"55\",\n        \"area_code\": \"81\",\n        \"number\": \"999999999\"\n      }\n    }\n  },\n  \"payments\": [\n    {\n      \"payment_method\": \"checkout\",\n      \"checkout\": {\n        \"accepted_payment_methods\": [\"credit_card\"],\n        \"expires_in\": 3600,\n        \"default_payment_method\": \"credit_card\"\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2768,
+        768
+      ],
+      "id": "5c2f4b5b-9a82-46ce-bad5-3543893d26e8",
+      "name": "Teste - PagamentoCartaoCheckout",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "15mToq8A8FDTFhvG",
+          "name": "Secret_Key_Pagarme"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pagar.me/core/v5/orders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n  \"Content-Type\": \"application/json\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"closed\": true,\n  \"items\": [\n    {\n      \"code\": \"PROD01\",\n      \"description\": \"Produto\",\n      \"amount\": 1000,\n      \"quantity\": 1\n    }\n  ],\n  \"customer\": {\n    \"name\": \"João da Silva\",\n    \"email\": \"joao@email.com\",\n    \"document\": \"12345678909\",\n    \"type\": \"individual\",\n    \"phones\": {\n      \"mobile_phone\": {\n        \"country_code\": \"55\",\n        \"area_code\": \"81\",\n        \"number\": \"999999999\"\n      }\n    }\n  },\n  \"payments\": [\n    {\n      \"payment_method\": \"checkout\",\n      \"checkout\": {\n        \"accepted_payment_methods\": [\"pix\"],\n        \"default_payment_method\": \"pix\",\n        \"pix\": {\n          \"expires_in\": 3600\n        }\n      }\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2784,
+        992
+      ],
+      "id": "ffde0be5-fd01-4e64-a295-0af95282146b",
+      "name": "Teste - PagamentoPixCheckout",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "15mToq8A8FDTFhvG",
+          "name": "Secret_Key_Pagarme"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "produtos",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "nome",
+              "condition": "eq",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Field_Value', ``, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        32,
+        368
+      ],
+      "id": "5d9cc07a-ffcf-4e71-be08-6c5c3643b318",
+      "name": "BuscarProdutos",
+      "credentials": {
+        "supabaseApi": {
+          "id": "AcrEYpYcHw59nOxI",
+          "name": "Supabase DjanyCosmeticos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "itens_carrinho",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "carrinho_id"
+            },
+            {
+              "fieldId": "carrinho_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        176,
+        368
+      ],
+      "id": "e8e05444-566c-4d1f-b1de-b00aa1d59fde",
+      "name": "Create a row in Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "AcrEYpYcHw59nOxI",
+          "name": "Supabase DjanyCosmeticos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "carrinhos",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "telefone_whatsapp",
+              "keyValue": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3936,
+        -192
+      ],
+      "id": "bba2c6a2-348c-4b44-8776-ba22520df149",
+      "name": "Get a row",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "AcrEYpYcHw59nOxI",
+          "name": "Supabase DjanyCosmeticos"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bf8d0cea-4af7-41ca-bce4-ee671b6fbba1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -3728,
+        -192
+      ],
+      "id": "b1ad22fb-32b2-4256-80ab-d960069492ea",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "tableId": "carrinhos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "telefone_whatsapp",
+              "fieldValue": "={{ $('Webhook1').item.json.body.data.key.remoteJid }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "Em progresso"
+            },
+            {
+              "fieldId": "criado_em",
+              "fieldValue": "={{ $today }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3520,
+        -96
+      ],
+      "id": "c5292f0e-adec-41db-8981-fc3e4b19d18b",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "AcrEYpYcHw59nOxI",
+          "name": "Supabase DjanyCosmeticos"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Orquestrador": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "Guardrails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrails1": {
+      "main": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Memory - Agente Orquestrador": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Delete row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atendimento_Humano": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Responder_Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuscarProdutos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row in Supabase": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a row": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "44574de5-20a9-46b8-84e4-2a19fd3af2c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "388b71a751030da20016171cd4faeee6cd32856ecbda353ff6fb2bf8fdce7baf"
+  },
+  "id": "Gffjf6ftE18eoMvI",
+  "tags": []
+}

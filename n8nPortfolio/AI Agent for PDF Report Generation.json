@@ -1,0 +1,2079 @@
+{
+  "name": "AI Agent for PDF Report Generation",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -2848,
+        96
+      ],
+      "id": "858a548c-03ab-4d49-bd8c-49a365ee67cf",
+      "name": "Telegram Trigger",
+      "webhookId": "4eca25b8-47aa-4521-93fb-548405543508",
+      "credentials": {
+        "telegramApi": {
+          "id": "Edof8bDzVu2s0rwZ",
+          "name": "Telegram_test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2624,
+        48
+      ],
+      "id": "b14213aa-b16d-45f9-8f8b-6129031d1271",
+      "name": "Transcribe a recording",
+      "credentials": {
+        "openAiApi": {
+          "id": "6vvW6ivwYtIZPXCn",
+          "name": "OpenAi Giovanni Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.photo }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "402e873c-fbc0-44f5-b5fd-ed23c8eaa93e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Foto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "41085952-1496-437d-99e1-7897db899328",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.voice }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0333fd28-bf99-4218-b00b-70b902baec14",
+                    "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        -112
+      ],
+      "id": "e8a6b071-c1f1-4e43-bff2-01f8f920c46d",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.voice.file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1904,
+        48
+      ],
+      "id": "abfac01f-f0fc-4b48-b83c-f8efa59f95b6",
+      "name": "PegarAudio"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/{{$json.result.file_path}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2112,
+        48
+      ],
+      "id": "d5147a23-a7a7-42d2-908a-77171c43ca50",
+      "name": "BaixarAudio"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1cacee3b-acce-408b-8c86-f21843244668",
+              "name": "Text",
+              "value": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1904,
+        240
+      ],
+      "id": "d0b9415b-c69e-4c67-a057-28d58fcb3dd4",
+      "name": "Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79aadf9d-9225-46e4-8b4d-b023eedb5bf9",
+              "name": "Text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2848,
+        48
+      ],
+      "id": "ea5128d1-8d28-4cad-9b2f-b3a2b0ac642a",
+      "name": "Audio"
+    },
+    {
+      "parameters": {
+        "url": "https://api.telegram.org/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/getFile",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "file_id",
+              "value": "={{ $('Telegram Trigger').item.json.message.photo.slice(-1)[0].file_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1904,
+        -112
+      ],
+      "id": "3565ecb8-4135-40be-890d-513ed80048bd",
+      "name": "PegarFoto"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/{{$json.result.file_path}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2112,
+        -112
+      ],
+      "id": "ca7febda-ff57-41bb-95d8-2d168e85c89c",
+      "name": "BaixarFoto"
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "Você é um assistente técnico especializado em análise visual agronômica.\n\nAnalise detalhadamente a imagem recebida.\n\nSua análise deve ser técnica, objetiva e baseada apenas no que é visível na imagem.\nNão invente informações e não faça suposições que não possam ser inferidas visualmente.\n\nEstruture sua resposta exatamente nos seguintes tópicos:\n\nDescrição Geral da Cena\nDescreva o que aparece na imagem (tipo de cultura, estágio visual da planta, ambiente, solo, presença de equipamentos, etc).\n\nCondição Vegetativa\nAvalie visualmente:\n\nColoração das folhas\n\nPresença de clorose\n\nNecrose\n\nMurcha\n\nManchas\n\nCrescimento aparente\n\nUniformidade da vegetação\n\nCondição do Solo\nDescreva:\n\nPresença de umidade visível\n\nCompactação aparente\n\nRachaduras\n\nPlantas invasoras\n\nResíduos orgânicos\n\nCobertura do solo\n\nPossíveis Indícios Técnicos\nSomente se houver evidência visual clara, indique possíveis sinais de:\n\nDeficiência nutricional\n\nEstresse hídrico\n\nDoenças\n\nPragas\n\nDanos mecânicos\n\nSe não houver evidência clara, diga explicitamente que não é possível confirmar apenas pela imagem.\n\nObservações Relevantes\nInclua qualquer outro detalhe técnico importante visível.\n\nImportante:\n\nNão use emojis.\n\nNão escreva como conversa.\n\nNão faça perguntas.\n\nNão utilize linguagem informal.\n\nNão invente diagnósticos.\n\nSeja técnico e preciso.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        2832,
+        -112
+      ],
+      "id": "aecc01e3-1734-4fd7-b284-570aa0ceeb51",
+      "name": "Analyze image",
+      "credentials": {
+        "openAiApi": {
+          "id": "6vvW6ivwYtIZPXCn",
+          "name": "OpenAi Giovanni Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f693f31a-3c94-40ef-a607-69a619ff1628",
+              "name": "Text",
+              "value": "=Análise da imagem: {{ $json['0'].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3056,
+        -112
+      ],
+      "id": "ec96c327-7453-4d63-a3f9-b6d9e39f059b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.MensagemPicotada }}",
+        "messageData": "={{ $json.mensagem }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3872,
+        64
+      ],
+      "id": "9f012fed-2115-45f7-b041-e167c4a34306",
+      "name": "Redis",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4112,
+        64
+      ],
+      "id": "5ad09063-f69a-457d-a73c-3c0a06df8dc6",
+      "name": "Wait",
+      "webhookId": "68cd6312-d0d1-45e3-b43f-f0cd3cac0009"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "msgFinal",
+        "key": "={{ $('Edit Fields2').item.json.MensagemPicotada }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4336,
+        64
+      ],
+      "id": "d50e8576-13dc-43bf-b49e-93ffe56dcc6b",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields2').item.json.MensagemPicotada }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        4960,
+        48
+      ],
+      "id": "ae455d5a-d849-402d-b3d4-c2089361f2f7",
+      "name": "Redis3",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b03ea4e6-2a07-4a84-9378-2799178c64ed",
+              "leftValue": "={{ $json.msgFinal.last() }}",
+              "rightValue": "={{ $('Wait').item.json.mensagem }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4544,
+        64
+      ],
+      "id": "806b331f-bce4-4db1-91f5-a90978c3f85a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "beb77b21-6257-4ef3-96d4-ff29e50fa37a",
+              "name": "msgFinal",
+              "value": "={{ $json.msgFinal.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4768,
+        48
+      ],
+      "id": "dc1ac256-ffdd-48e7-987a-aebdb53048fd",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea64d323-8d25-4eb3-b40f-1204d0ab14be",
+              "name": "MensagemPicotada",
+              "value": "=msgPicotada{{ $('Telegram Trigger').item.json.message.chat.username }}",
+              "type": "string"
+            },
+            {
+              "id": "ccd1e4b8-a1f8-4fd7-9fba-d8f7d0449661",
+              "name": "mensagem",
+              "value": "={{ $json.Text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3616,
+        64
+      ],
+      "id": "0f753871-9516-4e4f-a558-614639368e4f",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.msgFinal }}",
+        "guardrails": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        5168,
+        48
+      ],
+      "id": "2aecd7f4-9446-4741-8533-25d8e341ec92",
+      "name": "Guardrails"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.guardrailsInput }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Você é um Agente Orquestrador de Relatórios Técnicos Agronômicos, operando via Telegram, integrado a um fluxo automatizado no n8n.\n\nVocê NÃO realiza diagnóstico agronômico clínico profundo.\nVocê NÃO inventa dados técnicos.\nVocê NÃO toma decisões técnicas que não estejam explícitas nas mensagens do usuário.\n\nSeu papel é organizar, classificar e estruturar informações enviadas pelo agrônomo, transformando textos e áudios em um relatório técnico de visita agronômica, seguindo rigorosamente o escopo do sistema GRAPA.\n\n### Função Principal do Agente\n\nSeu objetivo é:\n\nInterpretar mensagens de texto e áudios já processados\nClassificar o conteúdo corretamente\nOrganizar as informações em um relatório técnico estruturado\nSolicitar apenas informações faltantes essenciais\nGerar o conteúdo final do relatório para posterior conversão em PDF pelo n8n\nVocê atua apenas na camada de inteligência e organização, não no controle de fluxo da visita.\n\n### Premissas Importantes\n\n1- A lógica de início e encerramento de visitas é controlada externamente pelo n8n\n2- As imagens são tratadas e anexadas ao relatório diretamente pelo n8n\n3- Você NÃO menciona imagens no texto do relatório, apenas quantas imagens foram anexadas.\n4- Você trabalha apenas com informações textuais e transcrições de áudio\n5- Ao receber qualquer mensagem você vai OBRIGATORIAMENTE chamar a tool \"ListaPerguntas\" para saber todas as perguntas e respostas que você já recebeu dessa avaliação.\n\n### Classificação Inteligente do Conteúdo\n\nVocê deve analisar o conteúdo recebido e classificar automaticamente em:\n\nIdentificação\nDetectar, quando existirem: Propriedade,, Latada ou talhão, Válvula, Variedade\nData da visita\nCondições Observadas\nDescrições técnicas do estado da cultura, sintomas, ambiente, pragas, falhas ou qualquer observação objetiva relatada.\nRecomendações\nTrechos que contenham orientações técnicas, ações sugeridas ou medidas a serem adotadas, sempre com base apenas no que foi informado.\n\n### Tratamento de Informações Faltantes\n\nApós processar todas as mensagens disponíveis, se algum campo essencial da identificação estiver ausente, você deve perguntar ao usuário.\n\nRegras:\n\nApenas uma pergunta por mensagem\nPerguntas naturais, humanas e diretas\nNunca repetir perguntas já respondidas\nSe o usuário optar por não responder quando você pedir mais informações, você respeita e segue o fluxo\n\nExemplo:\nNão identifiquei a variedade da uva. Pode me informar?\n\n### Construção do Relatório Técnico\n\nQuando houver informações suficientes, você deve estruturar o relatório no seguinte formato:\n\nRELATÓRIO DE VISITA\n\nIdentificação\nPropriedade\nLatada ou talhão\nVálvula\nVariedade\nData da visita\n\nCondições Observadas\nResumo técnico objetivo baseado exclusivamente nas informações fornecidas.\n\nRecomendações\nResumo técnico objetivo baseado exclusivamente nas informações fornecidas.\n\nImagens\nVocê vai inserir numa tag de html <img> o link de todas as imagens da conversa.\n\nSe algum item não tiver sido informado, ele deve ser omitido do relatório.\n\n### Regras de Linguagem e Comportamento\n\nLinguagem técnica simples e objetiva\nTom profissional e natural\nNunca usar linguagem robótica\nNunca usar emojis\nNunca usar markdown, listas com símbolos ou caracteres especiais\nNunca inventar informações\nNunca inferir dados que não estejam explícitos\n\n### Tools Disponíveis\n\nVocê possui apenas as seguintes tools:\n\nListaPerguntas (você vai chamar em cada mensagem que você receber)\nFinalizarConversa (você vai chamar ela quando você finalizar o relatório e for finalizar a conversa)\n\nRegras:\n\nVocê não controla o momento da nova visita\nVocê chama ListaPerguntas sempre que receber qualquer mensagem\nFinalizarConversa só deve ser chamada quando o relatório estiver completo\n\n### Formato Obrigatório de Output\n\nVocê SEMPRE deve retornar um JSON no seguinte formato:\n\n{\n  \"isFile\": true,\n  \"message\": \"RELATÓRIO ...\",\n  \"images\": [\n    \"https://supabase-url1\",\n    \"https://supabase-url2\"\n  ]\n}\n\n\n\nRegras:\n\nisFile = false quando for mensagem normal ao usuário\nisFile = true quando o conteúdo for o relatório final que será convertido em PDF\nmessage = A mensagem que você vai mandar pro usuário (ou o conteúdo do relatório)\nimages = Lista de links de imagens que você recebeu de todas as conversas da avaliação\n\nNunca retorne texto fora desse JSON\nNunca retorne \"no\" ou \"yes\", pois quero apenas boolean. Use só \"true\" ou \"false\"\nSempre retorne a lista de imagens como uma lista, mas quero que fique vazia se não tiver nenhum dado ou link.\n\n### Princípio Final\n\nNunca delire nem responda nada que seja fora do escopo, o mesmo vale para responder com outras línguas ou caracteres diferentes. "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        5408,
+        32
+      ],
+      "id": "62358e92-01e7-44ac-8fa7-c44408f8cc00",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2-chat-latest",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2-chat-latest"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        5280,
+        528
+      ],
+      "id": "bc40c7d5-1159-4b35-842d-7da2d4e96fc6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "6vvW6ivwYtIZPXCn",
+          "name": "OpenAi Giovanni Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.username }}",
+        "sessionTTL": 21600,
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        5456,
+        528
+      ],
+      "id": "562fc92f-f94c-4b23-a9ec-1101357aebf9",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "Y8KAjw944AsPXLVa",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('TraduzJson').item.json.chatId }}",
+        "text": "={{ $('TraduzJson').item.json.message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -2208,
+        960
+      ],
+      "id": "9ff06021-7de2-45b8-81ac-d6d0d272cba9",
+      "name": "Send a text message",
+      "webhookId": "30b524e9-b215-4dea-a99b-7ba9d0d2f23a",
+      "credentials": {
+        "telegramApi": {
+          "id": "Edof8bDzVu2s0rwZ",
+          "name": "Telegram_test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "queue": "grapa-test",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmq",
+      "typeVersion": 1.1,
+      "position": [
+        6352,
+        32
+      ],
+      "id": "4d6b06f5-5f42-4748-9a7d-c044eb478806",
+      "name": "RabbitMQ",
+      "credentials": {
+        "rabbitmq": {
+          "id": "pH2S8DzNn7qXg1l0",
+          "name": "RabbitMQ account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "queue": "grapa-test",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rabbitmqTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2880,
+        784
+      ],
+      "id": "27647171-812a-47ff-afd1-652468d10ae0",
+      "name": "RabbitMQ Trigger",
+      "credentials": {
+        "rabbitmq": {
+          "id": "pH2S8DzNn7qXg1l0",
+          "name": "RabbitMQ account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "usuarios",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "idUsuario",
+              "keyValue": "={{ $json.message.from.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2640,
+        96
+      ],
+      "id": "0b55ae15-5d38-48a3-8455-86bab2acea31",
+      "name": "BuscarUsuario",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "Avaliacao",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_usuario",
+              "keyValue": "={{ $json.userId }}"
+            },
+            {
+              "keyName": "status",
+              "keyValue": "Ativa"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        80
+      ],
+      "id": "fe93e2cb-c037-4877-b201-e745467415da",
+      "name": "BuscarAvaliacao",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "68043df7-b802-4c3a-beb5-acab46a5d3d5",
+              "name": "idAvaliacao",
+              "value": "={{ $json.id ||  $('BuscarAvaliacao').item.json.id}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        -96
+      ],
+      "id": "ae353b46-b106-4371-ac0d-251302c6278e",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "mensagens",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_avaliacao",
+              "keyValue": "={{ $('Edit Fields4').item.json.idAvaliacao }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        5600,
+        528
+      ],
+      "id": "c6d1eadc-10f6-4460-b2d5-7f5dfbf5e6f6",
+      "name": "ListaPerguntas",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Avaliacao",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Edit Fields4').item.json.idAvaliacao }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "Finalizado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        5744,
+        528
+      ],
+      "id": "6d1c3905-09ca-498b-872b-e97bf74e96bf",
+      "name": "FinalizarConversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "mensagens",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "id_usuario",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.from.id }}"
+            },
+            {
+              "fieldId": "id_avaliacao",
+              "fieldValue": "={{ $json.idAvaliacao }}"
+            },
+            {
+              "fieldId": "enviadoEm",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "be74450d-2229-474f-be72-c2b171f2db36",
+      "name": "NovaMensagem",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "mensagens",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_mensagem",
+              "condition": "eq",
+              "keyValue": "={{ $('NovaMensagem').item.json.id_mensagem }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "link",
+              "fieldValue": "={{ $json.publicUrl }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2832,
+        -272
+      ],
+      "id": "fd806db4-a568-4194-98b3-577a998d35e1",
+      "name": "SalvarLinkImagem",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://uelyxdzeclirqgdjmsqv.supabase.co/storage/v1/object/grapa-test/{{ $('Edit Fields4').item.json.idAvaliacao }}/{{ $('Telegram Trigger').item.json.message.photo[0].file_unique_id }}.jpg",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbHl4ZHplY2xpcnFnZGptc3F2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY1ODE3MCwiZXhwIjoyMDg2MjM0MTcwfQ.1ETFkBtkdSYsCkP2tVubCEC1yGB0K-hcKNgEsRikTpc"
+            },
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbHl4ZHplY2xpcnFnZGptc3F2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY1ODE3MCwiZXhwIjoyMDg2MjM0MTcwfQ.1ETFkBtkdSYsCkP2tVubCEC1yGB0K-hcKNgEsRikTpc"
+            },
+            {
+              "name": "Content-Type",
+              "value": "image/jpeg"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2496,
+        -272
+      ],
+      "id": "7541b402-492e-4c55-b668-c6133106ccbd",
+      "name": "uploadImagem"
+    },
+    {
+      "parameters": {
+        "operation": "sendDocument",
+        "chatId": "={{ $('TraduzJson').item.json.chatId }}",
+        "binaryData": true,
+        "binaryPropertyName": "relatorio.pdf",
+        "additionalFields": {
+          "fileName": "relatorio.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1152,
+        688
+      ],
+      "id": "54d0b00f-6069-47cc-918c-ca9248bab6ad",
+      "name": "Send a document",
+      "webhookId": "b9588851-1062-4506-b21c-668248cb3ecf",
+      "credentials": {
+        "telegramApi": {
+          "id": "Edof8bDzVu2s0rwZ",
+          "name": "Telegram_test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c6dc7414-d473-41a7-80e8-6349046cc453",
+              "leftValue": "={{ $json.idUsuario }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2432,
+        96
+      ],
+      "id": "727a3df4-577a-4aa9-8906-2e0836adc735",
+      "name": "UsuarioRegistrado"
+    },
+    {
+      "parameters": {
+        "tableId": "Avaliacao",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "id_usuario",
+              "fieldValue": "={{ $('BuscarUsuario').item.json.userId }}"
+            },
+            {
+              "fieldId": "data_avaliacao",
+              "fieldValue": "={{ $today }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        -224
+      ],
+      "id": "392ffd00-3454-4fc5-b14f-d354d869edcc",
+      "name": "CriarAvaliacao1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Avaliacao",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "Finalizado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        -224
+      ],
+      "id": "8355b0af-de97-43be-94de-048a9efdea7e",
+      "name": "FinalizarAvaliacao",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a8b56c7d-c688-4221-81d2-d0b43e661e4f",
+              "leftValue": "={{ $('Telegram Trigger').item.json.message.text }}",
+              "rightValue": "/visita",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1072,
+        -48
+      ],
+      "id": "06d3f598-00df-467b-bbad-b471296c1bb6",
+      "name": "MensagemCorreta"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e1ba3fbb-4eb4-40f5-949d-0fd486674b69",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2000,
+        80
+      ],
+      "id": "45907a83-1dfd-442b-be3c-ca43f668a8dd",
+      "name": "AvaliacaoExiste"
+    },
+    {
+      "parameters": {
+        "tableId": "Avaliacao",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "id_usuario",
+              "fieldValue": "={{ $('BuscarUsuario').item.json.userId}}"
+            },
+            {
+              "fieldId": "data_avaliacao",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        352
+      ],
+      "id": "eadbaf3f-dde9-4c03-9776-e5fe7f17dbe1",
+      "name": "CriarAvaliacao",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "92d088e8-b0f5-4fbc-8c80-b309b589e1a0",
+              "leftValue": "={{ $json.passouDe6Horas }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1536,
+        64
+      ],
+      "id": "0fbe7276-d3c5-4a87-82f7-364fb36304b5",
+      "name": "Passoude6h"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const projectId = \"uelyxdzeclirqgdjmsqv\";\n  const key = item.json.Key;\n\n  const publicUrl = `https://${projectId}.supabase.co/storage/v1/object/public/${key}`;\n\n  return {\n    json: {\n      ...item.json,\n      publicUrl\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2672,
+        -272
+      ],
+      "id": "7d06d33a-b166-4a92-92c4-7960cc985e78",
+      "name": "gerarLink"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const dataIso = item.json.data_avaliacao;\n\n  if (!dataIso) {\n    return {\n      json: {\n        ...item.json,\n        erro: \"data_avaliacao não encontrada\"\n      }\n    };\n  }\n\n  const dataAvaliacao = new Date(dataIso);\n  const agora = new Date(); // já vem em UTC internamente\n\n  const diffMs = agora.getTime() - dataAvaliacao.getTime();\n\n  const diffHoras = diffMs / (1000 * 60 * 60);\n  const diffMinutos = diffMs / (1000 * 60);\n\n  return {\n    json: {\n      ...item.json,\n      horasDesdeInicio: Number(diffHoras.toFixed(2)),\n      minutosDesdeInicio: Math.floor(diffMinutos),\n      passouDe6Horas: diffHoras >= 6\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1744,
+        64
+      ],
+      "id": "fe565543-db11-4353-bd50-0b44f57fbecf",
+      "name": "CalculoHoras"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "Avaliacao",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('BuscarAvaliacao').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "Finalizado"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        208
+      ],
+      "id": "c7a9e088-78f6-4be8-956f-06ed1ddbeef7",
+      "name": "FinalizarAvaliacao1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  item.binary.data.mimeType = 'image/jpeg';\n  return item;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        -112
+      ],
+      "id": "ac450118-7fe9-47fe-9b24-ee457a98728b",
+      "name": "TransformaJpeg"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const parsed = JSON.parse(item.json.output);\n\n  return {\n    json: {\n      isFile: parsed.isFile,\n      message: parsed.message\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5824,
+        32
+      ],
+      "id": "99724ce1-b88e-4d61-b090-74d61f7c5af7",
+      "name": "TransformaJson"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d5e92911-21b1-4449-af3a-a89ca805a5f8",
+              "name": "isFile",
+              "value": "={{ $json.isFile }}",
+              "type": "string"
+            },
+            {
+              "id": "c2d54e1f-2cd7-4016-bdbb-b9e9f30fd9f9",
+              "name": "message",
+              "value": "={{ $json.message }}",
+              "type": "string"
+            },
+            {
+              "id": "a774e72e-a1bc-4386-91ed-5e1c7384faf7",
+              "name": "chatId",
+              "value": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6064,
+        32
+      ],
+      "id": "80b7f09c-d9ce-4949-90f3-1b6147c86436",
+      "name": "VariaveisEnviadas"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  try {\n    const parsed = JSON.parse(item.json.content);\n\n    return {\n      json: {\n        isFile: parsed.isFile,\n        message: parsed.message,\n        chatId: parsed.chatId\n      }\n    };\n  } catch {\n    return {\n      json: {\n        isFile: null,\n        message: null,\n        chatId: null\n      }\n    };\n  }\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2672,
+        784
+      ],
+      "id": "ff46946c-af53-4c19-a221-bf480a2559da",
+      "name": "TraduzJson"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8b54fed8-c62c-446e-adc7-f87bcdae903b",
+              "leftValue": "={{ $json.isFile }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2400,
+        784
+      ],
+      "id": "21a0c3f1-3af2-46ae-87ad-172db1f9dfeb",
+      "name": "isFile"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n\n  let text = item.json.message;\n\n  const imageMatches = [...text.matchAll(/<img>(.*?)<\\/img>/g)];\n  const imageUrls = imageMatches.map(match => match[1]);\n\n  text = text.replace(/<img>.*?<\\/img>/g, '');\n  text = text.replace(/Imagens/gi, '');\n\n  const formattedText = text.replace(/\\n/g, '<br>');\n  const dataGeracao = new Date().toLocaleString(\"pt-BR\");\n\n  let imagesHtml = '';\n\n  if (imageUrls.length > 0) {\n    imagesHtml = `\n      <div class=\"section-bar\">\n        REGISTRO FOTOGRÁFICO (${imageUrls.length} foto(s))\n      </div>\n\n      <div class=\"images-grid\">\n        ${imageUrls.map(url => `\n          <div class=\"image-container\">\n            <img src=\"${url}?width=900&quality=60\" />\n          </div>\n        `).join('')}\n      </div>\n    `;\n  }\n\n  const html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n\n<style>\n\n@page {\n  size: A4;\n  margin: 0;\n}\n\nhtml, body {\n  margin: 0;\n  padding: 0;\n  background: #ffffff;\n  font-family: Arial, Helvetica, sans-serif;\n}\n\n.header {\n  background: linear-gradient(135deg, #65364f 0%, #7a1038 100%);\n  color: white;\n  padding: 60px 40px 70px 40px;\n  text-align: center;\n  position: relative;\n}\n\n.header img {\n  position: absolute;\n  left: 40px;\n  top: 35px;\n  height: 80px;\n}\n\n.header h1 {\n  margin: 0;\n  font-size: 34px;\n  font-weight: bold;\n}\n\n.header p {\n  margin-top: 14px;\n  font-size: 17px;\n}\n\n.page {\n  padding: 40px 50px;\n  box-sizing: border-box;\n}\n\n.section-bar {\n  background-color: #65364f;\n  color: white;\n  padding: 10px 15px;\n  font-size: 14px;\n  font-weight: bold;\n  margin-top: 30px;\n  margin-bottom: 15px;\n}\n\n.content-block {\n  font-size: 13px;\n  line-height: 1.7;\n  color: #111;\n}\n\n.images-grid {\n  display: grid;\n  grid-template-columns: 1fr 1fr;\n  gap: 15px;\n  margin-top: 10px;\n}\n\n.image-container {\n  width: 100%;\n  height: 180px;\n  overflow: hidden;\n  border-radius: 6px;\n  page-break-inside: avoid;\n}\n\n.image-container img {\n  width: 100%;\n  height: 100%;\n  object-fit: cover;\n  display: block;\n}\n\n.footer {\n  text-align: center;\n  font-size: 11px;\n  margin-top: 40px;\n  color: #555;\n}\n\n</style>\n</head>\n\n<body>\n\n  <div class=\"header\">\n    <img src=\"https://media.licdn.com/dms/image/v2/D4D0BAQFHY4mPIooBsA/company-logo_200_200/B4DZfuZidpHkAI-/0/1752051363333/grapa_global_logo?e=1772668800&v=beta&t=v97PrUHLWli0i-bX-j0XSo519HTggPH709bjJ7qCAuQ\">\n    <h1>RELATÓRIO TÉCNICO DE VISITA</h1>\n    <p>GRAPA - Gestão de Relatórios Agronômicos</p>\n  </div>\n\n  <div class=\"page\">\n\n    <div class=\"section-bar\">\n      RELATÓRIO TÉCNICO GERADO\n    </div>\n\n    <div class=\"content-block\">\n      ${formattedText}\n    </div>\n\n    ${imagesHtml}\n\n    \n\n  </div>\n\n</body>\n</html>\n`;\n\n  return {\n    json: {\n      html\n    }\n  };\n\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2192,
+        688
+      ],
+      "id": "86ba8420-d9d5-4396-bd52-5eef00367034",
+      "name": "criaHtml"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n-gotenberg.59uqo2.easypanel.host/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "marginTop",
+              "value": "0"
+            },
+            {
+              "name": "marginBottom",
+              "value": "0"
+            },
+            {
+              "name": "marginLeft",
+              "value": "0"
+            },
+            {
+              "name": "marginRight",
+              "value": "0"
+            },
+            {
+              "name": "printBackground",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "relatorio.pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1488,
+        688
+      ],
+      "id": "a6c5e3c7-bf45-400e-8a70-de430e4ef705",
+      "name": "BaixaPDF"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html",
+          "mimeType": "text/html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        -1744,
+        688
+      ],
+      "id": "3d321b29-14d2-4854-b29d-b169266c260e",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "339104cc-d8e2-4607-a2fd-2e7153de51fa",
+              "name": "html",
+              "value": "={{ $json.html.base64Encode() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1984,
+        688
+      ],
+      "id": "c07305f7-1cb1-4d38-b8f9-0288d207d8ec",
+      "name": "base64"
+    },
+    {
+      "parameters": {
+        "tableId": "usuarios",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "idUsuario",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+            },
+            {
+              "fieldId": "primeiroNome",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.first_name }}"
+            },
+            {
+              "fieldId": "ultimoNome",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.last_name }}"
+            },
+            {
+              "fieldId": "userId",
+              "fieldValue": "={{ $('Telegram Trigger').item.json.message.chat.username || null}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2224,
+        352
+      ],
+      "id": "2ff82ee7-6c14-46d4-80ae-a1335fa92e25",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "yoEtEDxL8VYuDto4",
+          "name": "Supabase GrapaAccount"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "BuscarUsuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording": {
+      "main": [
+        [
+          {
+            "node": "Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "PegarFoto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PegarAudio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PegarAudio": {
+      "main": [
+        [
+          {
+            "node": "BaixarAudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaixarAudio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PegarFoto": {
+      "main": [
+        [
+          {
+            "node": "BaixarFoto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaixarFoto": {
+      "main": [
+        [
+          {
+            "node": "TransformaJpeg",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis3": {
+      "main": [
+        [
+          {
+            "node": "Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Redis3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrails": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "TransformaJson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RabbitMQ Trigger": {
+      "main": [
+        [
+          {
+            "node": "TraduzJson",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuscarUsuario": {
+      "main": [
+        [
+          {
+            "node": "UsuarioRegistrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuscarAvaliacao": {
+      "main": [
+        [
+          {
+            "node": "AvaliacaoExiste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "NovaMensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ListaPerguntas": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalizarConversa": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NovaMensagem": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uploadImagem": {
+      "main": [
+        [
+          {
+            "node": "gerarLink",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UsuarioRegistrado": {
+      "main": [
+        [
+          {
+            "node": "BuscarAvaliacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalizarAvaliacao": {
+      "main": [
+        [
+          {
+            "node": "CriarAvaliacao1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CriarAvaliacao1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensagemCorreta": {
+      "main": [
+        [
+          {
+            "node": "FinalizarAvaliacao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AvaliacaoExiste": {
+      "main": [
+        [
+          {
+            "node": "CalculoHoras",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CriarAvaliacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CriarAvaliacao": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Passoude6h": {
+      "main": [
+        [
+          {
+            "node": "FinalizarAvaliacao1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MensagemCorreta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gerarLink": {
+      "main": [
+        [
+          {
+            "node": "SalvarLinkImagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CalculoHoras": {
+      "main": [
+        [
+          {
+            "node": "Passoude6h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalizarAvaliacao1": {
+      "main": [
+        [
+          {
+            "node": "CriarAvaliacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TransformaJpeg": {
+      "main": [
+        [
+          {
+            "node": "uploadImagem",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Analyze image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TransformaJson": {
+      "main": [
+        [
+          {
+            "node": "VariaveisEnviadas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "VariaveisEnviadas": {
+      "main": [
+        [
+          {
+            "node": "RabbitMQ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TraduzJson": {
+      "main": [
+        [
+          {
+            "node": "isFile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "isFile": {
+      "main": [
+        [
+          {
+            "node": "criaHtml",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "criaHtml": {
+      "main": [
+        [
+          {
+            "node": "base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaixaPDF": {
+      "main": [
+        [
+          {
+            "node": "Send a document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "BaixaPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "base64": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a row": {
+      "main": [
+        [
+          {
+            "node": "CriarAvaliacao",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "America/Sao_Paulo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "67718684-7f30-4e4b-999c-31465e9a5774",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "388b71a751030da20016171cd4faeee6cd32856ecbda353ff6fb2bf8fdce7baf"
+  },
+  "id": "06zhRrEIoSCmfXYY",
+  "tags": []
+}

@@ -1,0 +1,1966 @@
+{
+  "name": "triagem-agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zapi-whatsapp",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -7824,
+        2400
+      ],
+      "id": "5a8d1ad9-b2f4-48c6-8da9-8cdb100c2764",
+      "name": "Webhook1",
+      "webhookId": "4dae5fc8-eb04-4769-a765-5915d00b1dde"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.msgFinal }}",
+        "guardrails": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        -1904,
+        2160
+      ],
+      "id": "b9836a1f-6b6f-4ab4-b25d-64ea644e24a6",
+      "name": "Guardrails1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2-chat-latest",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2-chat-latest"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1632,
+        2832
+      ],
+      "id": "da19fa44-ce56-40ed-a1c8-7a83e8f63a4d",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "spcGBHBvTzFCQ6Vb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "={{ $('Webhook1').first().json.body.text.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3936,
+        2080
+      ],
+      "id": "61d3eb5f-a787-43d0-a630-6b43f6fe0710",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -4528,
+        2320
+      ],
+      "id": "7e2c5bd4-916d-4638-89b8-28ae18574fba",
+      "name": "Transcribe a recording1",
+      "credentials": {
+        "openAiApi": {
+          "id": "spcGBHBvTzFCQ6Vb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "Você é um médico anestesiologista experiente, responsável por analisar imagens\nrecebidas durante uma Avaliação Pré-Anestésica (APA).\n\nSeu papel é realizar uma ANÁLISE VISUAL DESCRITIVA E TÉCNICA, com foco em:\n- avaliação de via aérea\n- identificação de achados relevantes em exames médicos\n- descrição objetiva, sem extrapolações ou diagnósticos definitivos\n\n⚠️ IMPORTANTE:\nVocê NÃO está realizando diagnóstico médico definitivo.\nVocê deve sempre deixar claro que a análise é baseada apenas nas imagens fornecidas\ne NÃO substitui a avaliação clínica presencial.\n\n---\n\n## 🦷 SE AS IMAGENS FOREM DE VIA AÉREA / FACE / PESCOÇO\n\nAnalise e descreva, quando possível:\n\n- Classe de Mallampati (I a IV), se visível\n- Abertura oral (adequada / reduzida)\n- Visualização de úvula e pilares amigdalianos\n- Dentição (presença de dentes, falhas, prótese dentária)\n- Extensão cervical (aparentemente preservada ou limitada)\n- Distância tireomentoniana (adequada ou aparentemente reduzida)\n- Qualquer achado relevante para manejo de via aérea\n\nCaso algum item NÃO possa ser avaliado pela imagem:\n- informe explicitamente que não foi possível avaliar\n\n---\n\n## 🧪 SE AS IMAGENS FOREM DE EXAMES COMPLEMENTARES\n\nAnalise de forma DESCRITIVA e OBJETIVA:\n\n### Exames laboratoriais (fotos de exames de sangue):\n- Identifique valores visíveis alterados\n- Cite valores e unidades quando legíveis\n- Caso não identifique alterações claras, descreva como \"sem alterações evidentes nas imagens fornecidas\"\n\n### ECG:\n- Descrever ritmo aparente (ex: ritmo sinusal)\n- Frequência aproximada, se possível\n- Presença ou ausência de alterações grosseiras visíveis\n- Não emitir laudo definitivo\n\n### Raio-X de tórax:\n- Transparência pulmonar\n- Área cardíaca (normal ou aparentemente aumentada)\n- Presença de opacidades evidentes\n- Sempre como descrição visual\n\n---\n\n## 🧠 REGRAS OBRIGATÓRIAS\n\n- NÃO inventar informações\n- NÃO assumir normalidade se não estiver visível\n- NÃO usar linguagem alarmista\n- NÃO emitir diagnóstico definitivo\n- NÃO sugerir conduta clínica\n- NÃO extrapolar além do que é visível na imagem\n\nSe a imagem estiver ruim, incompleta ou não permitir avaliação adequada,\ndeclare isso explicitamente.\n\n---\n\n## 🧾 FORMATO DE SAÍDA (OBRIGATÓRIO)\n\nRetorne APENAS um texto técnico estruturado, pronto para ser usado no prontuário médico.\n\nUse exatamente este formato:\n\n### Avaliação por Imagem\n\n(descrição técnica aqui)\n\n### Observação\n\n(ressalva de que a análise é baseada apenas nas imagens e não substitui avaliação clínica presencial)\n\nNão use listas com marcadores excessivos.\nNão use emojis.\nNão use linguagem informal.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        -4528,
+        2576
+      ],
+      "id": "a8867574-d750-4a39-860b-f2a91634302c",
+      "name": "Analyze image1",
+      "credentials": {
+        "openAiApi": {
+          "id": "spcGBHBvTzFCQ6Vb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Nome do Paciente: {{ $('dadosUsuario').first().json.nome }}\n\nMensagem do Paciente: {{ $('Guardrails1').item.json.guardrailsInput }}",
+        "options": {
+          "systemMessage": "Você é um Agente Orquestrador de uma Triagem Pré-Anestésica (APA) realizada via WhatsApp.\n\nVocê NÃO interpreta exames clinicamente,\nNÃO toma decisões médicas.\n\nSeu papel é conduzir uma entrevista estruturada,\nUMA pergunta por vez.\n\nVocê sempre vai fazer o seguinte fluxo em cada conversa:\n1- Quando receber qualquer mensagem você vai OBRIGATORIAMENTE chamar SEMPRE EM CADA MENSAGEM a tool \"ListaPerguntas\" para ver as perguntas. Ali você vai ver as perguntas que faltam perguntar. você vai perguntar pra ele qual o nome e a idade. Quando você receber a data da cirurgia você vai chamar a tool \"DataCirurgia\" para atualizar lá a data da cirurgia na conversa.\n2- Você vai conseguir basear a etapa do usuário de acordo com a ordem e a última pergunta feita (com o ID de maior valor, será a última pergunta).\n3- Após o usuário responder a última pergunta, você vai mandar um resumo de suas respostas para o paciente para ele dizer se está tudo certo ou se vai querer mudar. Caso ele não mude nada você vai chamar a tool \"FinalizarConversa\" para finalizar essa conversa, onde você vai enviar nela a data da cirurgia, e um comentário sobre a cirurgia. Depois você vai chamar a tool \"RelatorioMedico\" para enviar o relatório para o médico. Não mande estas duas tools enquanto o questionário não estiver finalizado e confirmado pelo usuário!\n4- Caso o paciente mude algum dado você vai seguir o mesmo caminho do passo 3 (o anterior), mas mandando para o médico um relatório atualizado.\n\nOrdem a ser seguida das perguntas:\n\n1) Identificação (caso não preenchido)\n\n- Nome\n- Idade\n- Qual a cirurgia\n- Data da cirurgia\n- Cirurgião responsável\n\n2) Avaliação\n\n- Comorbidades e sintomatologia cardíaca (consegue subir dois lances de escada sem sentir falta de ar ou dor no peito?)\n- Cirurgias prévias (teve algum problema nessas cirurgias?)\n- Medicações de uso contínuo (onde você vai OBRIGATORIAMENTE perguntar o nome e a dose e a frequência de uso desses remédios)\n- Hábitos de vida (fuma, bebe, uso de drogas)\n- Alergias\n\n3) Exame físico\n\n- Peso\n- Altura\n- Pressão arterial (se tiver medidor)\n- Uso de prótese dentária\n- Fotos (boca aberta mostrando a garganta / mostrado os dentes / de perfil extendendo o pescoço e mostrando o queixo)\n\n4) Exames complementares\n\n- Exames de sangue (você só vai pedir o pdf ou imagens)\n- Raio X de tórax (se tiver feito)\n- ECG (se tiver feito)\n- Outras avaliações médicas: principalmente risco cirúrgico cardiológico (mas pode ser avaliação de pneumo, Hemato etc)\n\n\n### Regra para responder o paciente: Você responde SOMENTE com texto natural e de modo 100% humanizado, JAMAIS FAÇA PERGUNTAS ROBÔTICAS, faça apenas perguntas humanizadas, como se o paciente estivesse conversando com um humano:\n- UMA pergunta por mensagem\n- linguagem simples\n- tom respeitoso\n- adequado ao WhatsApp\n- NUNCA JSON\n- Você NUNCA deve usar caracteres de formatação do WhatsApp, incluindo: asteriscos (*), underline (_), til (~), crases (`). Isso inclui: palavras isoladas, partes de frases, ênfase emocional, destaques visuais. Exemplos PROIBIDOS: *data*, *cirurgia*, *_importante_*, *pra essa cirurgia*. Use SOMENTE texto simples, sem qualquer marcação.\n\nOBS: Caso o paciente não queira responder, não peça de novo a informação ao final, o paciente tem o direito de não responder uma pergunta. Jamais peça de novo algum exame outra vez, ou repita informação que já recebeu, se o usuário não quiser responder você não vai mais cobrar isso. \n\n### Regra sobre o envio do relatório para o médico: Nunca invente informações, use apenas o que estiver evidente nas mensagens. Seja extremamente objetivo e só escreva informações muito importantes para uma anotação clínica e não alucine. Nunca mencione o nome do paciente ou qualquer dado pessoal. Se não existir informações relevantes para algum dos campos mencionados, você pode retirar esse tópico da anotação clínica final. A resposta deve ser dada com markdown de negrito para os nomes dos campos. Não use nenhum markdown nem sequer nenhum \"*\" ou \"-\" ou qualquer coisa, use apenas letrar normais ao mandar a tool. Caso o paciente mude algum dado da entrevista você vai mandar o novo resumo da entrevista pro anestesista. Exemplo de mensagem para mandar na tool:\n\nTriagem Pré-Anestésica\n\nData da cirurgia: 25/01/2026\n1. Identificação\n        •        Nome: Maria Eduarda Cavalcanti\n        •        Idade: 54 anos\n        •        Cirurgia: Colecistectomia videolaparoscópica\n        •        Cirurgião Responsável: Dr. Ricardo Fontes\n\n2. Avaliação Clínica\n        •        Comorbidades: Hipertensão Arterial Sistêmica (HAS) e Diabetes Mellitus tipo 2.\n        ◦        Sintomatologia Cardíaca: Negativa. Paciente afirma subir dois lances de escada sem dispneia ou dor precordial (Metabolismo > 4 METs).\n        •        Cirurgias Prévias: Apendicectomia (2010) e Cesárea (1998). Sem intercorrências anestésicas relatadas.\n        •        Medicações em uso: Losartana 50mg (1x ao dia) e Metformina 850mg (2x ao dia).\n        •        Hábitos de Vida: Ex-tabagista (parou há 5 anos). Nega consumo de álcool ou drogas ilícitas.\n        •        Alergias: Nega alergias a medicamentos ou látex.\n\n3. Exame Físico (Informado/Imagens)\n        •        Peso: 78 kg | Altura: 1,65 m (IMC: 28,6 kg/m²)\n        •        Pressão Arterial: 135/85 mmHg\n        •        Prótese Dentária: Sim (superior, removível).\n        •        Avaliação de Via Aérea (Análise de Imagem):\n        ◦        Mallampati: Classe II (visualização de úvula e pilares amigdalianos).\n        ◦        Abertura de boca: Preservada (> 3 polpas digitais).\n        ◦        Extensão cervical: Sem restrições aparentes.\n        ◦        Distância tireomentoniana: Adequada (> 6 cm).\n        •        COLOCAR LINKS DAS IMAGENS PARA ACESSO PELO MÉDICO, mas os colocar enumerado e SEPARADOS, UM LINK POR VEZ, em ordem de entrega (na mensagem para o médico)\n\n\n4. Exames Complementares\n        •        Exames de Sangue (20/01/2026): (COLOCAR O VALOR DOS ALTERADOS E CITAR OS DEMAIS DIZENDO QUE ESTAVAM NORMAIS)\n        ◦        Hb: 13.2 g/dL | Ht: 40%\n        ◦        Creatinina: 0.9 mg/dL\n        ◦        Glicemia de jejum: 118 mg/dL\n        ◦        Coagulograma: Sem alterações.\n        •        Raio-X de Tórax: Transparência pulmonar normal, seios costofrênicos livres. Área cardíaca no limite superior da normalidade.\n        •        ECG: Ritmo sinusal, 72 bpm. Sem sinais de isquemia ou bloqueios.\n        •        Outras Avaliações: * Risco Cirúrgico (Cardiologia): Classificado como Risco Habitual (ACP/Lee). Recomendado manter anti-hipertensivo no dia da cirurgia e suspender metformina 24h antes.\n\n5. Conclusão: paciente ASA II\n\n\nOBS1: Você SEMPRE vai mandar os links das imagens e arquivos sempre que enviar a avaliação para o médico. Os links vão estar junto com as mensagens do paciente. Além disso na mensagem final pro médico você vai fazer um breve resumo do que recebeu de cada exame, dizendo APENAS o que estava anormal. JAMAIS ESQUEÇA DE MANDAR ALGUM DOS LINKS, MANDE TODOS OS LINKS QUE ESTIVEREM EM UMA CONVERSA!\n\nOBS2: Você sempre que pedir um exame para o paciente você vai pedir apenas imagens ou o PDF, nunca texto.\n\nObs3: Na mensagem para o médico você vai enfatizar a classificação ASA do paciente, nunca se esqueça."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1632,
+        2144
+      ],
+      "id": "00d2121b-8a02-453b-911d-bdadfc1b4374",
+      "name": "Agente Orquestrador1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "={{ $('Transcribe a recording1').item.json.text }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3936,
+        2320
+      ],
+      "id": "ba5cc355-0e13-4da0-bdbd-e6c6977ddde5",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "=Contexto da imagem:\n\n- Análise da Imagem: {{ $('Analyze image1').item.json['0'].content[0].text }}\n\n- Mensagem do usuário sobre a imagem: {{ $('Webhook1').item.json.body.image.caption }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3936,
+        2576
+      ],
+      "id": "b9b5ab9d-a1ae-4276-801f-a2628ea4c87a",
+      "name": "Edit Fields9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "=Contexto do PDF\n\n- Título do PDF: {{ $('Webhook1').item.json.body.document.title }}\n\n- Conteúdo do PDF: {{ $json.text }}\n\n- Mensagem do usuário sobre o PDF: {{ $('Webhook1').item.json.body.document.caption }}\n\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -4048,
+        2848
+      ],
+      "id": "0b94bb5b-b70f-47c3-b6ab-2ff229355436",
+      "name": "Edit Fields10"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3E0A3E20048D4070409B02121E6AE94B/token/D9555422C0A16BE7A4BF93D3/send-text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Client-Token",
+              "value": "F5763e74e6ac34e76a9341ba6b5ac9521S"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $('Webhook1').first().json.body.phone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Agente Orquestrador1').item.json.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -1008,
+        2144
+      ],
+      "id": "bbf4faaf-a857-44e5-912f-893be839714c",
+      "name": "Send_Message1"
+    },
+    {
+      "parameters": {
+        "operation": "push",
+        "list": "={{ $json.MensagemPicotada }}",
+        "messageData": "={{ $json.mensagem }}",
+        "tail": true
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -3152,
+        2176
+      ],
+      "id": "9f186721-0674-4978-8fde-0e3386464de1",
+      "name": "Redis2",
+      "credentials": {
+        "redis": {
+          "id": "LZee3lbD00gqt0s3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -2992,
+        2176
+      ],
+      "id": "277f30b9-90f4-478f-b0fe-254e0c44cf66",
+      "name": "Wait1",
+      "webhookId": "98fb0189-60bf-48a2-b3eb-07012a1ae2b2"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "msgFinal",
+        "key": "={{ $('Edit Fields11').item.json.MensagemPicotada }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2768,
+        2176
+      ],
+      "id": "43b9624f-82d9-4ffc-8801-0c5d2e3f90f3",
+      "name": "Redis4",
+      "credentials": {
+        "redis": {
+          "id": "LZee3lbD00gqt0s3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "={{ $('Edit Fields11').item.json.MensagemPicotada }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -2144,
+        2160
+      ],
+      "id": "c73f0b1e-07c5-40b0-b04e-448395262d4a",
+      "name": "Redis5",
+      "credentials": {
+        "redis": {
+          "id": "LZee3lbD00gqt0s3",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b03ea4e6-2a07-4a84-9378-2799178c64ed",
+              "leftValue": "={{ $json.msgFinal.last() }}",
+              "rightValue": "={{ $('Wait1').item.json.mensagem }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2560,
+        2176
+      ],
+      "id": "58e23238-b2d4-477d-9e9e-e88b844e9428",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea64d323-8d25-4eb3-b40f-1204d0ab14be",
+              "name": "MensagemPicotada",
+              "value": "=msgPicotada{{ $('Webhook1').first().json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "ccd1e4b8-a1f8-4fd7-9fba-d8f7d0449661",
+              "name": "mensagem",
+              "value": "={{ $json.texto }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3344,
+        2176
+      ],
+      "id": "e5896303-3446-4d39-9e29-6f61a0d523b8",
+      "name": "Edit Fields11"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "beb77b21-6257-4ef3-96d4-ff29e50fa37a",
+              "name": "msgFinal",
+              "value": "={{ $json.msgFinal.join(\" \") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2336,
+        2160
+      ],
+      "id": "a9556e2e-399b-4e08-be28-1499ed7410ad",
+      "name": "Edit Fields12"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "usuarios",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "whatsapp",
+              "keyValue": "={{ $json.body.phone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -7584,
+        2400
+      ],
+      "id": "335c9406-381b-4bc8-a8bf-2d9c25abde32",
+      "name": "dadosUsuario",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "APA",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "whatsapp_usuario",
+              "keyValue": "={{ $json.whatsapp }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -7104,
+        2272
+      ],
+      "id": "b528ee42-13a4-4c15-81d4-ef70bc29ada6",
+      "name": "PegarConversa",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a2ade48-d166-4d2b-b013-cf4236792a98",
+              "name": "id_conversa",
+              "value": "={{ $json.id_conversa }}",
+              "type": "number"
+            },
+            {
+              "id": "5e9288c2-a360-4955-87c4-3516c70984b8",
+              "name": "whatsapp_anestesista",
+              "value": "={{ $json.whatsapp_anestesista }}",
+              "type": "string"
+            },
+            {
+              "id": "01289445-1ddb-499d-aef5-4135f71a105f",
+              "name": "whatsapp_paciente",
+              "value": "={{ $json.whatsapp_usuario }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -5984,
+        2288
+      ],
+      "id": "76fadf2e-7c62-430c-9871-8c2aab2ba09d",
+      "name": "Dado_Conversa"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "APA",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_conversa",
+              "condition": "eq",
+              "keyValue": "={{ $('Dado_Conversa').first().json.id_conversa }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "Finalizada"
+            },
+            {
+              "fieldId": "data_cirurgia",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', `Aqui você vai enviar a data, no formato \"yyyy-mm-dd\"`, 'string') }}"
+            },
+            {
+              "fieldId": "anotacao",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', `Aqui você vai colocar um breve resumo sobre o que foi relatado. Pode colocar o que você vai mandar pro médico em uma linguagem médica.`, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -1168,
+        2832
+      ],
+      "id": "59de34a1-2caa-47b3-9c1f-2e9aac505d00",
+      "name": "FinalizarConversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f9ff4249-97d7-48e3-8996-c3637f010478",
+              "leftValue": "={{ $json.whatsapp }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -7264,
+        2400
+      ],
+      "id": "c105cc0b-33fa-4db7-8c93-f80ea114fd09",
+      "name": "UsuarioRegistrado?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9ba92052-cf71-40fa-afca-9c937ce0b358",
+              "leftValue": "={{ $('Webhook1').item.json.body.text.message }}",
+              "rightValue": "Gostaria de fazer minha avaliação pré anestésica",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -7088,
+        2560
+      ],
+      "id": "cbb1807f-42ba-4187-8cc6-ccf1a7c32ee0",
+      "name": "MensagemCorreta?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6c5e0ece-7ad6-47a2-bcab-a4405f430d56",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "Finalizada",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -6896,
+        2272
+      ],
+      "id": "ac82264e-8943-42bc-9da2-9d28c2c30425",
+      "name": "AvaliacaoFInalizada?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9ba92052-cf71-40fa-afca-9c937ce0b358",
+              "leftValue": "={{ $('Webhook1').item.json.body.text.message }}",
+              "rightValue": "Gostaria de fazer minha avaliação pré anestésica",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -6688,
+        2144
+      ],
+      "id": "d38f7232-6f31-4663-a426-922d1346edb1",
+      "name": "MensagemCorreta?1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookItem = $items(\"Webhook1\")[0]?.json;\nconst texto =\n  webhookItem?.body?.text?.message || '';\n\nconst telefoneMatch = texto.match(/\\b\\d{11,14}\\b/);\n\nreturn [\n  {\n    telefone_extraido: telefoneMatch ? telefoneMatch[0] : null\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6720,
+        2544
+      ],
+      "id": "afe8097c-a51b-48db-9f52-2f5c4a6bccca",
+      "name": "CodigoWhatsappMedico"
+    },
+    {
+      "parameters": {
+        "tableId": "usuarios",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "whatsapp",
+              "fieldValue": "={{ $('Webhook1').item.json.body.phone }}"
+            },
+            {
+              "fieldId": "nome",
+              "fieldValue": "={{ $('Webhook1').item.json.body.chatName }}"
+            },
+            {
+              "fieldId": "tipo",
+              "fieldValue": "Paciente"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6464,
+        2544
+      ],
+      "id": "124c8dda-0ee7-421d-a4ee-e27cc2b01414",
+      "name": "CriarUsuario",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "APA",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "whatsapp_usuario",
+              "fieldValue": "={{ $('Webhook1').item.json.body.phone }}"
+            },
+            {
+              "fieldId": "whatsapp_anestesista",
+              "fieldValue": "={{ $('CodigoWhatsappMedico').item.json.telefone_extraido }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6240,
+        2544
+      ],
+      "id": "56f65246-949c-4715-bc26-808797cdf314",
+      "name": "CriarConversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "APA",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "whatsapp_usuario",
+              "fieldValue": "={{ $('Webhook1').first().json.body.phone }}"
+            },
+            {
+              "fieldId": "whatsapp_anestesista",
+              "fieldValue": "={{ $('CodigoWhatsappMedico1').first().json.telefone_extraido }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -6256,
+        2128
+      ],
+      "id": "350d531f-07de-47e9-bfa5-3557f2e77265",
+      "name": "CriarNovaConversa",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook1').item.json.body.audio.audioUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4752,
+        2320
+      ],
+      "id": "62bd916f-37a9-4eeb-8b86-8bada940815c",
+      "name": "BaixarAudio"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook1').item.json.body.image.imageUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4752,
+        2576
+      ],
+      "id": "88943703-5f20-4d15-a3cd-23a7e035f48f",
+      "name": "BaixarImagem",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook1').item.json.body.document.documentUrl }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -4752,
+        2784
+      ],
+      "id": "883b77f1-ca8c-42e3-aea5-7c80df52d461",
+      "name": "BaixarPDF"
+    },
+    {
+      "parameters": {
+        "tableId": "mensagem",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "whatsapp_pessoa",
+              "fieldValue": "={{ $json.whatsapp_paciente }}"
+            },
+            {
+              "fieldId": "APA",
+              "fieldValue": "={{ $json.id_conversa }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -5520,
+        2288
+      ],
+      "id": "30996717-5a7e-4d98-8303-33f2c35c0d61",
+      "name": "NovaMensagem",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Dado_Conversa').item.json.id_conversa }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1536,
+        2432
+      ],
+      "id": "69799e77-5891-4470-b565-17eec9904acc",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "mensagem",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('NovaMensagem').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "resposta_ia",
+              "fieldValue": "={{ $json.output }}"
+            },
+            {
+              "fieldId": "resposta_usuario",
+              "fieldValue": "={{ $('MensagemFinal').item.json.texto }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        2144
+      ],
+      "id": "30fd2487-acc6-4eeb-b24f-22189de7fbfb",
+      "name": "Update a row4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -4560,
+        2784
+      ],
+      "id": "48b4072a-b1cf-4698-8221-8c92898f352a",
+      "name": "ExtrairTextoPDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "function sanitizeText(value) {\n  if (!value) return value;\n\n  return value\n    // remove NULL bytes\n    .replace(/\\u0000/g, '')\n    // remove outros caracteres de controle invisíveis\n    .replace(/[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]/g, '')\n    // normaliza espaços\n    .trim();\n}\n\nconst item = $json;\n\n// exemplo: se você vai salvar texto do PDF\nreturn [\n  {\n    ...item,\n    text: sanitizeText(item.text || item.content || '')\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4352,
+        2784
+      ],
+      "id": "54ceb10d-e669-41dd-89d8-5716f1dc5afc",
+      "name": "SanitizarTexto"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "mensagem",
+        "limit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Limit', ``, 'number') }}",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "whatsapp_pessoa",
+              "condition": "eq",
+              "keyValue": "={{ $('Webhook1').first().json.body.phone }}"
+            },
+            {
+              "keyName": "APA",
+              "condition": "eq",
+              "keyValue": "={{ $('Dado_Conversa').item.json.id_conversa }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        2832
+      ],
+      "id": "3b555bb6-89e5-44c9-bb39-284021d6b602",
+      "name": "ListaPerguntas",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Chame esta tool para enviar os dados do paciente para o anestesista.",
+        "method": "POST",
+        "url": "https://api.z-api.io/instances/3E0A3E20048D4070409B02121E6AE94B/token/D9555422C0A16BE7A4BF93D3/send-text",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Client-Token",
+              "value": "F5763e74e6ac34e76a9341ba6b5ac9521S"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "phone",
+              "value": "={{ $('Dado_Conversa').first().json.whatsapp_anestesista }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters1_Value', `Envie aqui a mensagem do relatório ao médico. ENVIE OBRIGATORIAMENTE `, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        -800,
+        2832
+      ],
+      "id": "b2b60710-7e43-4388-8023-e0502da9f63f",
+      "name": "RelatorioMedico"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4a46b05-3f57-42f0-808c-fabe7b388888",
+              "name": "texto",
+              "value": "={{ $json.texto }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3568,
+        2176
+      ],
+      "id": "f7267fa0-da6c-453d-8ebe-665ed11d06cd",
+      "name": "MensagemFinal"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Webhook1').first().json.body.text.message }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "560e2c70-a218-4d32-986d-bdc7c52ea85b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Texto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "979749b5-220e-4a64-a407-54af13e4f5ba",
+                    "leftValue": "={{ $('Webhook1').first().json.body.audio.mimeType }}",
+                    "rightValue": "audio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "21764e10-6eeb-4739-9ca6-48d2033ea977",
+                    "leftValue": "={{ $('Webhook1').first().json.body.image.mimeType }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Foto"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "59c4c5ab-0fb9-4461-bbc0-1146ae422927",
+                    "leftValue": "={{ $('Webhook1').first().json.body.document.mimeType }}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Arquivo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -5104,
+        2256
+      ],
+      "id": "1c4d1722-b282-4e03-8326-0656718b75d7",
+      "name": "tipoMensagem"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookItem = $items(\"Webhook1\")[0]?.json;\n\nconst texto =\n  webhookItem?.body?.text?.message || '';\n\nconst telefoneMatch = texto.match(/\\b\\d{11,14}\\b/);\n\nreturn [\n  {\n    telefone_extraido: telefoneMatch ? telefoneMatch[0] : null\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6480,
+        2128
+      ],
+      "id": "0cb1594c-d39a-4b03-a33d-32634bcdd47c",
+      "name": "CodigoWhatsappMedico1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "mensagem",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('NovaMensagem').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo",
+              "fieldValue": "Texto"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4400,
+        2080
+      ],
+      "id": "ad592f8d-8a49-4af5-b27c-c7137055dbe7",
+      "name": "Update a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "mensagem",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('NovaMensagem').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo",
+              "fieldValue": "Audio"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4256,
+        2320
+      ],
+      "id": "fd9f58c4-0b8a-4e04-a107-59bd536ce2dc",
+      "name": "Update a row1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "APA",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_conversa",
+              "condition": "eq",
+              "keyValue": "={{ $('Dado_Conversa').first().json.id_conversa }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "data_cirurgia",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', ``, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        2832
+      ],
+      "id": "2db49cfa-e892-4a46-a121-1f7db8cf88c8",
+      "name": "DataCirurgia",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "mensagem",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('NovaMensagem').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo",
+              "fieldValue": "Imagem"
+            },
+            {
+              "fieldId": "link",
+              "fieldValue": "={{ $('Webhook1').item.json.body.image.imageUrl }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4256,
+        2576
+      ],
+      "id": "2cfe220a-4a03-4250-8142-1b68a60e84d1",
+      "name": "Update a row2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "mensagem",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('NovaMensagem').item.json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "tipo",
+              "fieldValue": "Arquivo"
+            },
+            {
+              "fieldId": "link",
+              "fieldValue": "={{ $('Webhook1').item.json.body.document.documentUrl }}"
+            },
+            {
+              "fieldId": "resposta_usuario"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -4064,
+        2672
+      ],
+      "id": "ebb9863a-d2c3-49d6-b4e3-ee6bdecc3662",
+      "name": "Update a row3",
+      "credentials": {
+        "supabaseApi": {
+          "id": "fOVAFnDHWN586KYK",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many buckets": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "dadosUsuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrails1": {
+      "main": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "MensagemFinal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe a recording1": {
+      "main": [
+        [
+          {
+            "node": "Update a row1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze image1": {
+      "main": [
+        [
+          {
+            "node": "Update a row2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente Orquestrador1": {
+      "main": [
+        [
+          {
+            "node": "Update a row4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "MensagemFinal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields9": {
+      "main": [
+        [
+          {
+            "node": "MensagemFinal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields10": {
+      "main": [
+        [
+          {
+            "node": "MensagemFinal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis2": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Redis4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis4": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis5": {
+      "main": [
+        [
+          {
+            "node": "Guardrails1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields11": {
+      "main": [
+        [
+          {
+            "node": "Redis2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields12": {
+      "main": [
+        [
+          {
+            "node": "Redis5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "dadosUsuario": {
+      "main": [
+        [
+          {
+            "node": "UsuarioRegistrado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PegarConversa": {
+      "main": [
+        [
+          {
+            "node": "AvaliacaoFInalizada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dado_Conversa": {
+      "main": [
+        [
+          {
+            "node": "NovaMensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FinalizarConversa": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UsuarioRegistrado?": {
+      "main": [
+        [
+          {
+            "node": "PegarConversa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "MensagemCorreta?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensagemCorreta?": {
+      "main": [
+        [
+          {
+            "node": "CodigoWhatsappMedico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AvaliacaoFInalizada?": {
+      "main": [
+        [
+          {
+            "node": "MensagemCorreta?1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Dado_Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensagemCorreta?1": {
+      "main": [
+        [
+          {
+            "node": "CodigoWhatsappMedico1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CodigoWhatsappMedico": {
+      "main": [
+        [
+          {
+            "node": "CriarUsuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CriarUsuario": {
+      "main": [
+        [
+          {
+            "node": "CriarConversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CriarConversa": {
+      "main": [
+        [
+          {
+            "node": "Dado_Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CriarNovaConversa": {
+      "main": [
+        [
+          {
+            "node": "Dado_Conversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaixarAudio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe a recording1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaixarImagem": {
+      "main": [
+        [
+          {
+            "node": "Analyze image1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BaixarPDF": {
+      "main": [
+        [
+          {
+            "node": "ExtrairTextoPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NovaMensagem": {
+      "main": [
+        [
+          {
+            "node": "tipoMensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row4": {
+      "main": [
+        [
+          {
+            "node": "Send_Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ExtrairTextoPDF": {
+      "main": [
+        [
+          {
+            "node": "SanitizarTexto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SanitizarTexto": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields10",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update a row3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ListaPerguntas": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RelatorioMedico": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MensagemFinal": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tipoMensagem": {
+      "main": [
+        [
+          {
+            "node": "Update a row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BaixarAudio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BaixarImagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BaixarPDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CodigoWhatsappMedico1": {
+      "main": [
+        [
+          {
+            "node": "CriarNovaConversa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DataCirurgia": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agente Orquestrador1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a row3": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "2d716c97-4f53-4100-8d31-5c1368117070",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e70ea77804e47854981adc9e55dba139b0b53e6d9cc74e9017f6b7a595544f61"
+  },
+  "id": "vl46JpXBIikHaI67MwKS8",
+  "tags": []
+}
