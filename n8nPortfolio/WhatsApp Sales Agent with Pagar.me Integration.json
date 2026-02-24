@@ -623,7 +623,7 @@
         "jsonHeaders": "{\n  \"Content-Type\": \"application/json\"\n}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"closed\": true,\n  \"items\": [\n    {\n      \"code\": \"PROD01\",\n      \"description\": \"Produto\",\n      \"amount\": 1000,\n      \"quantity\": 1\n    }\n  ],\n  \"customer\": {\n    \"name\": \"João da Silva\",\n    \"email\": \"joao@email.com\",\n    \"document\": \"12345678909\",\n    \"type\": \"individual\",\n    \"phones\": {\n      \"mobile_phone\": {\n        \"country_code\": \"55\",\n        \"area_code\": \"81\",\n        \"number\": \"999999999\"\n      }\n    }\n  },\n  \"payments\": [\n    {\n      \"payment_method\": \"checkout\",\n      \"checkout\": {\n        \"accepted_payment_methods\": [\"credit_card\"],\n        \"expires_in\": 3600,\n        \"default_payment_method\": \"credit_card\"\n      }\n    }\n  ]\n}",
+        "jsonBody": " ",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -653,7 +653,7 @@
         "jsonHeaders": "{\n  \"Content-Type\": \"application/json\"\n}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "{\n  \"closed\": true,\n  \"items\": [\n    {\n      \"code\": \"PROD01\",\n      \"description\": \"Produto\",\n      \"amount\": 1000,\n      \"quantity\": 1\n    }\n  ],\n  \"customer\": {\n    \"name\": \"João da Silva\",\n    \"email\": \"joao@email.com\",\n    \"document\": \"12345678909\",\n    \"type\": \"individual\",\n    \"phones\": {\n      \"mobile_phone\": {\n        \"country_code\": \"55\",\n        \"area_code\": \"81\",\n        \"number\": \"999999999\"\n      }\n    }\n  },\n  \"payments\": [\n    {\n      \"payment_method\": \"checkout\",\n      \"checkout\": {\n        \"accepted_payment_methods\": [\"pix\"],\n        \"default_payment_method\": \"pix\",\n        \"pix\": {\n          \"expires_in\": 3600\n        }\n      }\n    }\n  ]\n}",
+        "jsonBody": " ",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
