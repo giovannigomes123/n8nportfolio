@@ -56,7 +56,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.apify.com/v2/acts/AdwCDVyhFcWXQF9tg/runs",
+        "url": "https://api.apify.com/v2/acts/ /runs",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -148,7 +148,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.apify.com/v2/acts/JJghSZmShuco4j9gJ/runs",
+        "url": "https://api.apify.com/v2/acts/ /runs",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
