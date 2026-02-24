@@ -814,7 +814,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://synapso-lab-evolution-api.lfzurd.easypanel.host/message/sendText/giovanni-whatsapp",
+        "url": " ",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -842,7 +842,7 @@
       "parameters": {
         "toolDescription": "Chame esta tool quando precisar de um atendimento humano, após usar a tool \"Atendimento_Humano\"",
         "method": "POST",
-        "url": "https://synapso-lab-evolution-api.lfzurd.easypanel.host/message/sendText/giovanni-whatsapp",
+        "url": " ",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
