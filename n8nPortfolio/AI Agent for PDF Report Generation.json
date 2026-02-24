@@ -139,7 +139,7 @@
     },
     {
       "parameters": {
-        "url": "https://api.telegram.org/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/getFile",
+        "url": "",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -162,7 +162,7 @@
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/file/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/{{$json.result.file_path}}",
+        "url": "",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -222,7 +222,7 @@
     },
     {
       "parameters": {
-        "url": "https://api.telegram.org/bot8415518416:AAGrPb13kE4OjJrs-2rNGMoXWFGZXGNvxYo/getFile",
+        "url": ",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -852,11 +852,11 @@
           "parameters": [
             {
               "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbHl4ZHplY2xpcnFnZGptc3F2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY1ODE3MCwiZXhwIjoyMDg2MjM0MTcwfQ.1ETFkBtkdSYsCkP2tVubCEC1yGB0K-hcKNgEsRikTpc"
+              "value": "Bearer "
             },
             {
               "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVlbHl4ZHplY2xpcnFnZGptc3F2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY1ODE3MCwiZXhwIjoyMDg2MjM0MTcwfQ.1ETFkBtkdSYsCkP2tVubCEC1yGB0K-hcKNgEsRikTpc"
+              "value": ""
             },
             {
               "name": "Content-Type",
@@ -1323,7 +1323,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://n8n-gotenberg.59uqo2.easypanel.host/forms/chromium/convert/html",
+        "url": "",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
